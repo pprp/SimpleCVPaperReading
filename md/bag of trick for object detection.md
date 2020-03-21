@@ -33,15 +33,15 @@ mixup也是图片分类中的一个非常有效的trick, 具体流程如下图�
 
 大象通常都出现在自然场景下，数据集中是不存在背景是室内的图片的，Elephant in the room就是作者将大象图片抠出，然后直接放在室内场景下，并使用SOTA目标检测器进行检测，如下图所示：
 
-![](https://img-blog.csdnimg.cn/20200321171436646.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+![faster rcnn nas coco对大象在不同位置下的检测结果](https://img-blog.csdnimg.cn/20200321171436646.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
 可以看到使用SOTA(faster rcnn nas coco)检测大象的效果并不是很好，而且大象位置不同，也会给其他目标检测的效果带来影响，比如说上图中（d）和（f）图中cup这个对象没有被检测出来。
 
 ![](https://img-blog.csdnimg.cn/20200321172201331.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-这种现象叫做特征干扰，同一个目标在不同背景被检测为不同的物体，在ROI之外的特征对最终结果会产生影响，这说明特征干扰对检测的过程有害。
+上图是一个猫在不同的背景下的检测结果，可以看到虽然ROI中内容大体不变，但是结果却有比较大的变化，这种现象叫做特征干扰，同一个目标在不同背景被检测为不同的物体，在ROI之外的特征对最终结果会产生影响，这说明特征干扰对检测过程产生干扰，对检测结果产生不利影响。
 
-恰好本文提出的是视觉连贯的mixup方法可以比较好的解决这个问题，如下图所示：
+针对以上问题，本文提出的是视觉连贯的mixup方法可以比较好的解决，如下图所示：
 
 ![](https://img-blog.csdnimg.cn/20200321172828660.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
