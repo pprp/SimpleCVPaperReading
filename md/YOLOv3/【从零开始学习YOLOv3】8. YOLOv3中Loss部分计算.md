@@ -67,11 +67,77 @@ YOLOv3中有一个参数是ignore_thresh，在U版的YOLOv3中对应的是train.
 - 一个是置信度带来的误差，也就是obj带来的loss
 - 最后一个是类别带来的误差，也就是class带来的loss
 
-在代码中分别对应lbox, lobj, lcls。
+在代码中分别对应lbox, lobj, lcls，yolov3中使用的loss公式如下：
 
 
+$$
+\begin{aligned}
+lbox &= \lambda_{coord}\sum_{i=0}^{S^2}\sum_{j=0}^{B}1_{i,j}^{obj}[(b_x-\hat{b_x})^2+(b_y-\hat{b_y})^2+(b_w-\hat{b_w})^2+(b_h-\hat{b_h})^2] 
 
+\\
 
+lobj &= \sum_{i=0}^{S^2}\sum_{j=0}^{B}1_{i,j}^{obj}[-log(p_c)+\sum_{i=1}^{n}BCE(\hat{c_i},c_i)]
 
+\\
 
+lcls &= \lambda_{noobj}\sum_{i=0}^{S^2}\sum_{j=0}^{B}1_{i,j}^{noobj}[-log(1-p_c)]
 
+\\
+
+loss &= lbox + lobj + lcls
+
+\end{aligned}
+$$
+其中：
+
+S: 代表grid size, $S^2$代表13x13,26x26, 52x52
+
+B: box
+
+$1_{i,j}^{obj}$: 如果在i,j处的box有目标，其值为1，否则为0
+
+$1_{i,j}^{noobj}$: 如果在i,j处的box没有目标，其值为1，否则为0
+
+BCE（binary cross entropy）具体计算公式如下：
+$$
+BCE(\hat{c_i},c_i)=-\hat{c_i}\times log(c_i)-(1-\hat{c_i})\times log(1-c_i)
+$$
+以上是论文中yolov3对应的darknet。而pytorch版本的yolov3改动比较大，有较大的改动空间，可以通过参数进行调整。
+
+分成三个部分进行具体分析：
+
+**1. lbox部分**
+
+在U版的YOLOv3中，使用的是GIOU，具体讲解见[GIOU讲解链接](https://mp.weixin.qq.com/s/CNVgrIkv8hVyLRhMuQ40EA )。
+
+简单来说是这样的公式，IoU公式如下：
+$$
+IoU=\frac{|A\cap B|}{|A\cup B|}
+$$
+而GIoU公式如下：
+$$
+GIoU=IoU-\frac{|A_c-U|}{|A_c|}
+$$
+其中$A_c$代表两个框最小闭包区域面积，也就是同时包含了预测框和真实框的最小框的面积。
+
+yolov3中提供了IoU、GIoU、DIoU和CIoU等计算方式，以GIoU为例：
+
+```python
+if GIoU:  # Generalized IoU https://arxiv.org/pdf/1902.09630.pdf
+    c_area = cw * ch + 1e-16  # convex area
+    return iou - (c_area - union) / c_area  # GIoU
+```
+
+可以看到代码和GIoU公式是一致的，再来看一下lbox计算部分：
+
+```python
+giou = bbox_iou(pbox.t(), tbox[i],
+				x1y1x2y2=False, GIoU=True) 
+lbox += (1.0 - giou).sum() if red == 'sum' else (1.0 - giou).mean()
+```
+
+可以看到box的loss是1-giou的值。
+
+**2. lobj部分**
+
+lobj代表置信度，即该bounding box中是否含有物体的概率。
