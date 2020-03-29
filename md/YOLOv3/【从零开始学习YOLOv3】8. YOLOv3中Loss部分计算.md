@@ -1,12 +1,14 @@
 # 【从零开始学习YOLOv3】8. YOLOv3中Loss部分计算
 
-YOLOv1是一个anchor-free的，从YOLOv2开始引入了Anchor，在VOC2007数据集上将mAP提升了10个百分点。YOLOv3也继续使用了Anchor，本文主要讲U版YOLOv3的Loss部分的计算, 实际上这部分loss和原版差距非常大，并且可以通过arc指定loss的构建方式, 如果想看原版的loss可以在下方release的v6中下载源码。
+YOLOv1是一个anchor-free的，从YOLOv2开始引入了Anchor，在VOC2007数据集上将mAP提升了10个百分点。YOLOv3也继续使用了Anchor，本文主要讲ultralytics版YOLOv3的Loss部分的计算, 实际上这部分loss和原版差距非常大，并且可以通过arc指定loss的构建方式, 如果想看原版的loss可以在下方release的v6中下载源码。
 
  Github地址: https://github.com/ultralytics/yolov3 
 
 Github release: https://github.com/ultralytics/yolov3/releases 
 
-### 1. Anchor
+[TOC]
+
+## 1. Anchor
 
 Faster R-CNN中Anchor的大小和比例是由人手工设计的，可能并不贴合数据集，有可能会给模型性能带来负面影响。YOLOv2和YOLOv3则是通过聚类算法得到最适合的k个框。聚类距离是通过IoU来定义，IoU越大，边框距离越近。
 $$
@@ -16,7 +18,7 @@ Anchor越多，平均IoU会越大，效果越好，但是会带来计算量上�
 
 ![YOLOv2中聚类Anchor数量和IoU的关系图](https://img-blog.csdnimg.cn/20200326152932491.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-### 2. 偏移公式
+## 2. 偏移公式
 
 在Faster RCNN中，中心坐标的偏移公式是：
 
@@ -57,7 +59,7 @@ $$
 
 ## 3. Loss
 
-YOLOv3中有一个参数是ignore_thresh，在U版的YOLOv3中对应的是train.py文件中的`iou_t`参数（默认为0.225）。
+YOLOv3中有一个参数是ignore_thresh，在ultralytics版版的YOLOv3中对应的是train.py文件中的`iou_t`参数（默认为0.225）。
 
 **正负样本是按照以下规则决定的**：
 
@@ -76,15 +78,15 @@ YOLOv3中有一个参数是ignore_thresh，在U版的YOLOv3中对应的是train.
 
 $$
 \begin{aligned}
-lbox &= \lambda_{coord}\sum_{i=0}^{S^2}\sum_{j=0}^{B}1_{i,j}^{obj}[(b_x-\hat{b_x})^2+(b_y-\hat{b_y})^2+(b_w-\hat{b_w})^2+(b_h-\hat{b_h})^2] 
+lbox &= \lambda_{coord}\sum_{i=0}^{S^2}\sum_{j=0}^{B}1_{i,j}^{obj}(2-w_i\times h_i)[(x_i-\hat{x_i})^2+(y_i-\hat{y_i})^2+(w_i-\hat{w_i})^2+(h_i-\hat{h_i})^2] 
 
 \\
 
-lobj &= \sum_{i=0}^{S^2}\sum_{j=0}^{B}1_{i,j}^{obj}[-log(p_c)+\sum_{i=1}^{n}BCE(\hat{c_i},c_i)]
+lcls &= \lambda_{class}\sum_{i=0}^{S^2}\sum_{j=0}^{B}1_{i,j}^{obj}\sum_{c\in classes}p_i(c)log(\hat{p_i}(c))
 
 \\
 
-lcls &= \lambda_{noobj}\sum_{i=0}^{S^2}\sum_{j=0}^{B}1_{i,j}^{noobj}[-log(1-p_c)]
+lobj &= \lambda_{noobj}\sum_{i=0}^{S^2}\sum_{j=0}^{B}1_{i,j}^{noobj}(c_i-\hat{c_i})^2+\lambda_{obj}\sum_{i=0}^{S^2}\sum_{j=0}^{B}1_{i,j}^{obj}(c_i-\hat{c_i})^2
 
 \\
 
@@ -112,7 +114,7 @@ $$
 
 **1. lbox部分**
 
-在U版的YOLOv3中，使用的是GIOU，具体讲解见[GIOU讲解链接](https://mp.weixin.qq.com/s/CNVgrIkv8hVyLRhMuQ40EA )。
+在ultralytics版版的YOLOv3中，使用的是GIOU，具体讲解见[GIOU讲解链接](https://mp.weixin.qq.com/s/CNVgrIkv8hVyLRhMuQ40EA )。
 
 简单来说是这样的公式，IoU公式如下：
 $$
@@ -202,7 +204,7 @@ elif 'CE' in arc:  # unified CE (1 background + 80 classes)
 
 ## 4. 代码
 
-U版的yolov3的loss已经和论文中提出的部分大相径庭了，代码中很多地方地方是来自作者的经验。另外，这里读的代码是2020年2月份左右作者发布的版本，关注这个库的人会知道，作者更新速度非常快，在笔者写这篇文章的时候，loss也出现了大幅改动，添加了label smoothing等新的机制，去掉了通过arc来调整loss的机制，简化了loss部分。
+ultralytics版版的yolov3的loss已经和论文中提出的部分大相径庭了，代码中很多地方地方是来自作者的经验。另外，这里读的代码是2020年2月份左右作者发布的版本，关注这个库的人会知道，作者更新速度非常快，在笔者写这篇文章的时候，loss也出现了大幅改动，添加了label smoothing等新的机制，去掉了通过arc来调整loss的机制，简化了loss部分。
 
 这部分的代码添加了大量注释，很多是笔者通过debug得到的结果，理解的时候需要讲一下debug的配置：
 
@@ -322,7 +324,7 @@ def build_targets(model, targets):
 - 将ground truth和anchor进行匹配，得到iou
 - 然后有两个方法匹配：
   - 使用yolov3原版的匹配机制，仅仅选择iou最大的作为正样本
-  - 使用U版yolov3的默认匹配机制，use_all_anchors=True的时候，选择所有的匹配对
+  - 使用ultralytics版版yolov3的默认匹配机制，use_all_anchors=True的时候，选择所有的匹配对
 - 对以上匹配的部分在进行筛选，对应原版yolo中ignore_thresh部分，将以上匹配到的部分中iou<ignore_thresh的部分筛选掉。
 - 最后将匹配得到的内容返回到compute_loss函数中。
 
@@ -393,9 +395,9 @@ def compute_loss(p, targets, model):
             pxy = torch.sigmoid(
                 ps[:, 0:2] # 将x,y进行sigmoid
             )  # pxy = pxy * s - (s - 1) / 2,  s = 1.5  (scale_xy)
-
             pwh = torch.exp(ps[:, 2:4]).clamp(max=1E3) * anchor_vec[i]
             # 防止溢出进行clamp操作,乘以13x13feature map对应的anchor
+            # 这部分和上文中偏移公式是一致的
             pbox = torch.cat((pxy, pwh), 1)  # predicted box
             # pbox: predicted bbox shape:[6, 4]
             giou = bbox_iou(pbox.t(), tbox[i], x1y1x2y2=False,
@@ -451,5 +453,21 @@ def compute_loss(p, targets, model):
 
 需要注意的是，三个部分的loss的平衡权重不是按照yolov3原文的设置来做的，是通过超参数进化来搜索得到的，具体请看：[【从零开始学习YOLOv3】4. YOLOv3中的参数进化]( https://mp.weixin.qq.com/s?__biz=MzA4MjY4NTk0NQ==&mid=2247484757&idx=2&sn=abd254591a6a46077141e2356159c37d&chksm=9f80bfc3a8f736d50156f7b2939967587f5ddb85eb4ec7c88bdb6e0cc9aad2b00ebbc0888ecf&scene=21#wechat_redirect )
 
+## 5. 补充
 
+补充一下BCEWithLogitsLoss的用法，在这之前先看一下BCELoss:
 
+`torch.nn.BCELoss`的**功能**是二分类任务是的交叉熵计算函数，可以认为是CrossEntropy的特例。其分类限定为二分类，y的值必须为{0,1}，input应该是概率分布的形式。在使用BCELoss前一般会先加一个sigmoid激活层，常用在自编码器中。
+
+计算**公式**：
+$$
+l_n=-w_n[y_nlog(x_n)+(1-y_n)log(1-x_n)]
+$$
+$w_n$是每个类别的loss权重，用于类别不均衡问题。
+
+`torch.nn.BCEWithLogitsLoss`的相当于Sigmoid+BCELoss, 即input会经过Sigmoid激活函数，将input变为概率分布的形式。
+
+计算**公式**：
+$$
+l_n=-w_n[y_nlog\sigma(x_n)+(1-y_n)log(1-\sigma(x_n))]
+$$
