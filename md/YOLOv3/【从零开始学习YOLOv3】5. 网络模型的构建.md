@@ -3,9 +3,6 @@
 > 前言：之前几篇讲了cfg文件的理解、数据集的构建、数据加载机制和超参数进化机制，本文将讲解YOLOv3如何从cfg文件构造模型。本文涉及到一个比较有用的部分就是bias的设置，可以提升mAP、F1、P、R等指标，还能让训练过程更加平滑。
 
 
-
-[TOC]
-
 ## 1. cfg文件
 
 在YOLOv3中，修改网络结构很容易，只需要修改cfg文件即可。目前，cfg文件支持convolutional, maxpool, unsample, route, shortcut, yolo这几个层。

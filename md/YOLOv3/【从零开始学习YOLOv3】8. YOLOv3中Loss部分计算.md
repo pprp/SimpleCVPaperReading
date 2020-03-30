@@ -2,11 +2,10 @@
 
 YOLOv1是一个anchor-free的，从YOLOv2开始引入了Anchor，在VOC2007数据集上将mAP提升了10个百分点。YOLOv3也继续使用了Anchor，本文主要讲ultralytics版YOLOv3的Loss部分的计算, 实际上这部分loss和原版差距非常大，并且可以通过arc指定loss的构建方式, 如果想看原版的loss可以在下方release的v6中下载源码。
 
- Github地址: https://github.com/ultralytics/yolov3 
+Github地址: https://github.com/ultralytics/yolov3 
 
 Github release: https://github.com/ultralytics/yolov3/releases 
 
-[TOC]
 
 ## 1. Anchor
 
