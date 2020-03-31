@@ -1,0 +1,176 @@
+
+= 总标题
+Doc writer pprp<1115957667@qq.com>
+:toc:
+:imagesdir: assets/images
+:homepage: https://asciidoctor.org
+
+A normal paragraph.
+
+    A paragraph offset by at least one space becomes a literal paragraph.
+    All lines in a literal paragraph must be adjacent.
+
+    A literal paragraph is displayed as preformatted text.
+    The text is shown in a fixed-width font.
+    Spaces and newlines,
+    like the ones in this sentence,
+    are preserved.
+
+Another normal paragraph.
+
+
+== 1. 标题二
+
+
+=== 1.1 标题
+
+
+
+NOTE: An admonition paragraph draws the reader's attention to
+auxiliary information.
+Its purpose is determined by the label
+at the beginning of the paragraph.
+
+Here are the other built-in admonition types:
+
+TIP: Pro tip...
+
+IMPORTANT: Don't forget...
+
+WARNING: Watch out for...
+
+CAUTION: Ensure that...
+
+[.lead]
+This text will be styled as a lead paragraph (i.e., larger font).
+
+asdflkajsd;flkaj;sldkfja;lksdjfa;sdlkfj
+
+这是正逢我
+
+bold *constrained* & **un**constrained
+
+italic _constrained_ & __un__constrained
+
+bold italic *_constrained_* & **__un__**constrained
+
+monospace `constrained` & ``un``constrained
+
+monospace bold `*constrained*` & ``**un**``constrained
+
+monospace italic `_constrained_` & ``__un__``constrained
+
+monospace bold italic `*_constrained_*` & ``**__un__**``constrained
+
+`{cpp}` is valid syntax in the programming language by the same name.
+
+`+WHERE id <= 20 AND value = "{name}"+` is a SQL WHERE clause.
+
+Werewolves #are# allergic to #cassia cinnamon#.
+
+
+"`double curved quotes`"
+
+'`single curved quotes`'
+
+Olaf's desk was a mess.
+
+All of the werewolves`' desks were a mess.
+
+Olaf had been with the company since the `'60s.
+
+== 2. 标题三
+
+[#primitives-nulls]
+== Primitive types and null values
+
+Rubies are red, +
+Topazes are blue.
+
+[%hardbreaks]
+Ruby is red.
+Java is black.
+
+'''
+
+- test
+- edgea
+- asdflk
+
+* asdf
+** asdf
+** asdf
+
+* step
+
+- test
+
+. step1
+. step2
+. step3
+
+- test
+
+* [*] checked
+* [ ] not checked
+
+first term:: definition of first term
+second term:: definition of second term
+
+first term::
+definition of first term
+second term::
+definition of second term
+
+
+[qanda]
+What is Asciidoctor?::
+  An implementation of the AsciiDoc processor in Ruby.
+What is the answer to the Ultimate Question?:: 
+
+
+
+
+Operating Systems::
+  Linux:::
+    . Fedora
+      * Desktop
+    . Ubuntu
+      * Desktop
+      * Server
+  BSD:::
+    . FreeBSD
+    . NetBSD
+
+Cloud Providers::
+  PaaS:::
+    . OpenShift
+    . CloudBees
+  IaaS:::
+    . Amazon EC2
+    . Rackspace
+
+= Document Title
+:data-uri:
+
+video::video_file.mp4[]
+
+video::video_file.mp4[]
+
+
+....
+error: the request
+....
+
+
+----
+line of code  // <1>
+line of code  # <2>
+line of code  ;; <3>
+line of code  <!--4-->
+----
+
+<1> A callout behind a line comment for C-style languages.
+<2> A callout behind a line comment for Ruby, Python, Perl, etc.
+<3> A callout behind a line comment for Clojure.
+<4> A callout behind a line comment for XML or SGML languages like HTML.
