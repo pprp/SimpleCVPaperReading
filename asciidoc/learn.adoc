@@ -1,0 +1,298 @@
+= 学习使用asciidoc
+作者:pprp <1115957667@qq.com>
+v1.0, 2020-03-31
+:toc:
+:imagesdir: assets/images
+:homepage: https://cnblogs.com/pprp
+:data-uri:
+:source-highlighter: pygments
+
+//可用选项有： coderay、highlightjs、prettify 和 pygments。
+
+== 1. +号使用
+
+rubies are red, +
+Top
+
+random text random text random text random text random text random text random text random text random text random text
+
+ random text random text 
+ random text random text
+ random text random text
+ random text random text
+ random text random text
+
+== 2. attention使用
+
+NOTE: random text random text
+
+IMPORTANT: random text random text
+
+TIP: random text random text
+
+WARNING: random text random text
+
+CAUTION: random text random text
+
+== 3. 字体使用
+
+[.lead]
+random text random text
+
+random text random textrandom text random textrandom text random textrandom text random textrandom text random text
+
+斜体：
+_random text random text_
+
+加粗：
+*random text random text*
+
+自定义样式：
+
+1. random text #random text#
+
+2. random text small: [small]#random text#
+
+3. random text big: [big]#random text#
+
+== 4. 上角标和脚注
+
+A^super^
+A~super~
+
+== 5. 引号
+
+'`single`'
+
+"`single`"
+
+I'm your best friend.
+
+All of the werewolves`' desks were a mess.
+
+
+== 6. 水平线和分页符
+
+水平线上
+
+'''
+
+水平线下
+
+分页上
+
+<<<
+
+分页下
+
+== 7. 列表
+
+无序列表：
+
+* random text
+* random text
+* random text
+
+无序列表嵌套：
+
+* random text
+** random text
+** random text
+*** random text
+*** random text
+* random text
+
+清单:
+
+- [*] checked
+- [ ] unchecked
+- [x] also checked
+
+基本有序列表：
+
+. random text
+. random text
+. random text
+
+有序嵌套列表：
+
+. random text
+.. random text
+.. random text
+... random text
+. random text
+.. random text
+.. random text
+. random text
+
+单行标签列表
+
+first term:: definition of first term
+section term:: definition of second term
+
+多行标签列表 
+
+第一点::
+definition of first term
+第二点::
+definition of second term
+第三点::
+definition of thried term
+
+
+常见问题以及解答
+
+[qanda]
+What is Asciidoctor?::
+  An implementation of the AsciiDoc processor in Ruby.
+What is the answer to the Ultimate Question?:: 42
+
+
+混合样式
+
+苹果手机::
+    IOS系统:::
+    . 流畅
+    . 外观漂亮
+    价格:::
+    . 1000-3000
+    . 5000-10000
+安卓手机::
+  Android系统:::
+    . 自由度高
+    . 安装方便
+    . 易于操作
+  价格区间:::
+    . 1000-2000
+    . 2000-4000
+
+复杂内容列表：
+
+* [[bookmark]]random text random text random text random text random text 
++
+random text random text 
++
+random text random text random text 
+
+* random text random text random text 
+random text random text random text 
+
+ $ pip install tensorflow
+
+* random text random text random text 
+
+.backup
+[width="100%",options="header,footer"]
+|====================
+| a | b | c |  d
+| 1 | 2 | 3 |  4
+| 2 | 3 | 3 |  4
+| 3 | 3 | 3 |  4
+|====================
+
+
+
+== 8. 链接
+
+https://cnblogs.com/pprp
+
+https://cnblogs.com/pprp[我的博客园]
+
+https://cnblogs.com/pprp[pprp@ *我的博客园*]
+
+link:D:\Github\SimpleCVReproduction\tensorflow2\class4\dongpeijie_2016012963_4.pdf[第四次作业]
+
+link:https://github.com/pprp/SimpleCVPaperAbstractReading[paper reading]
+
+mailto:1115957667@qq.com[联系我吧]
+
+see <<bookmark>> to read random text
+
+== 9. 图片
+
+image::black.jpg[caption="Figure 1: ", title="A mountain sunset", alt="Sunset", width="300", height="200", link="http://cnblogs.com/pprp"]
+
+
+== 10. 视频
+
+video::D:\Github\SimpleCVReproduction\opencv-mot\video\1.mp4[]
+
+video::assets\\test.mp4[]
+
+
+== 11. 模块
+
+行内代码
+
+Reference code like `types` or `methods` inline.
+
+代码行
+
+ Indent the line one space to insert a code snippet
+
+代码块
+
+[source,python]
+....
+import numpy as np //<1>
+a = np.array(3,5) //<2>
+....
+<1> numpy import 
+<2> init a
+
+
+:sourcedir: src/main/java
+
+[source,java]
+----
+include::{sourcedir}/org/asciidoctor/Asciidoctor.java[]
+----
+
+[source,xml]
+<meta name='viewport'
+ content='width=device-width'>
+
+更多分割块
+
+以点开始的是块标题
+
+.正式内容开始之侧边栏
+****
+ random text random text random textrandom textrandom textrandom textrandom textrandom textrandom textrandom textrandom textrandom textrandom textrandom textrandom textrandom text
+****
+
+.Sample
+====
+here is random text
+
+.code
+[source,python]
+----
+import numpy as np
+import tensorflow as tf
+import torch
+----
+
+[listing]
+....
+= Title of Document
+Doc Writer
+:toc:
+
+This guide provides...
+....
+
+====
+
+[TIP]
+====
+random text 
+====
+
+引用块
+
+[quote, pprp]
+如果我是你，我就会pick大鱼海棠
+
+
+
