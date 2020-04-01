@@ -15,3 +15,12 @@ digraph foo {
   node1 -> node2 -> node3
 }
 ....
+
+Rubies are red, +
+Topazes are blue.
+
+[%hardbreaks]
+Ruby is red.
+Java is black.
+Ruby is red.
+Java is black.

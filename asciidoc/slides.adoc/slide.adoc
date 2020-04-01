@@ -1,13 +1,14 @@
 include::_settings_reveal.adoc[]
 
-// include::_settings_deck.adoc[]
 
-= Slide Title
+= 毕业设计
+pprp
 
-== Slide 1
 
-Slide 1 Content 
+== 选题
 
-== Slide 2
+百度一下你就知道
 
-Slide 2 Content
+
+== 详解
+
