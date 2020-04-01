@@ -1,7 +1,7 @@
 = 学习使用asciidoc
 作者:pprp <1115957667@qq.com>
 v1.0, 2020-03-31
-:toc:
+:toc: 
 :imagesdir: assets/images
 :homepage: https://cnblogs.com/pprp
 :data-uri:
@@ -215,9 +215,9 @@ image::black.jpg[caption="Figure 1: ", title="A mountain sunset", alt="Sunset", 
 
 == 10. 视频
 
-video::D:\Github\SimpleCVReproduction\opencv-mot\video\1.mp4[]
+//video::D:\\Github\\SimpleCVReproduction\\opencv-mot\\video\\1.mp4[]
 
-video::assets\\test.mp4[]
+//video::assets\\test.mp4[]
 
 
 == 11. 模块
@@ -294,5 +294,107 @@ random text
 [quote, pprp]
 如果我是你，我就会pick大鱼海棠
 
+== 12. 块ID、角色、选项
 
+[[goals]]
+[role="incremental"]
+* Goal 1
+* Goal 2
+
+[#goals.incremental]
+* Goal 1
+* Goal 2
+
+[[free_the_world]][big goal]_free the world_
+
+[#free_the_world.big.goal]_free the world_
+
+[rolename]`monospace text`
+
+[options="header,footer,autowidth"]
+|===
+|Cell A |Cell B
+|===
+
+// 单行注释
+
+// A single-line comment.
+
+
+////
+ 多行注释
+ 
+////
+
+== 13. 表格
+
+
+
+.Table Title
+|===
+|a|b|c
+|1|2|3
+|4|5|6
+|===
+
+[cols="1,1,2", options="header"] 
+.Applications
+|===
+|Name
+|Category
+|Description
+
+|Firefox
+|Browser
+|Mozilla Firefox is an open-source web browser.
+It's designed for standards compliance,
+performance, portability.
+
+|Arquillian
+|Testing
+|An innovative and highly extensible testing platform.
+Empowers developers to easily create real, automated tests.
+|===
+
+== 14. 属性的声明及使用
+
+:homepage: http://asciidoctor.org
+:docslink: http://asciidoctor.org/docs[Asciidoctor's Docs]
+:summary: Asciidoctor is a mature, plain-text document format for \
+       writing notes, articles, documentation, books, and more. \
+       It's also a text processor & toolchain for translating \
+       documents into various output formats (i.e., backends), \
+       including HTML, DocBook, PDF and ePub.
+:checkedbox: pass:normal[{startsb}&#10004;{endsb}]
+
+Check out {homepage}[Asciidoctor]!
+
+{summary}
+
+Check out {docslink} too!
+
+{checkedbox} That's done!
+
+(C)
+
+(R)
+
+(TM)
+
+->
+
+=>
+
+== 15. 参考文献
+
+random text<<part1>>
+
+
+[bibliography]
+- [[[part1]]] pprp & Thomas 1999
+
+
+== 16. 脚注
+
+random text footnote:[clarification about this text]
 
