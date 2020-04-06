@@ -198,8 +198,10 @@ IBN-Net中有几个重要结论，在总结部分梳理一下：
 
 ## 5. 参考
 
-https://arxiv.org/pdf/1512.03385.pdf
+https://arxiv.org/pdf/1512.03385
 
-1807.09441
+https://arxiv.org/pdf/1807.09441
 
-代码: https://github.com/XingangPan/IBN-Net 
+https://github.com/XingangPan/IBN-Net 
+
+ https://github.com/pprp/reid_for_deepsort/tree/master/models 
