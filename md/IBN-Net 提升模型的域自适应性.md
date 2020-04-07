@@ -162,11 +162,11 @@ class Bottleneck(nn.Module):
 
 ![IBN变体在ImageNet和使用Monet风格以后的结果](https://img-blog.csdnimg.cn/20200406133302374.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-可以看到，IBN-a可以提升在原先域(训练数据)内的泛化能力，比原来ResNet50要搞1-2个百分点。IBN-b可以提升在目标域(训练数据中未出现的数据)的泛化能力，可以看到要比ResNet50提高4个百分点。
+可以看到，IBN-a可以提升在原先域(训练数据)内的泛化能力，比原来ResNet50要高1-2个百分点。IBN-b可以提升在目标域(训练数据中未出现的数据)的泛化能力，可以看到要比ResNet50提高4个百分点。
 
 ![对于不同目标域数据泛化能力对比](https://img-blog.csdnimg.cn/20200406134322976.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-上图是采用了不同的外观转换比如RGB直接+50，R+50等方法，可以发现，依然遵从上一条发现，IBN-a可以提升原有域的泛化能力，IBN-b可以提升目标与的泛化能力，可以看到除了Monet风格化对IBN-b影响稍大，其他几种影响非常之小。
+上图是采用了不同的外观转换比如RGB直接+50，R+50等方法，可以发现，依然遵从上一条发现，IBN-a可以提升原有域的泛化能力，IBN-b可以提升目标域的泛化能力，可以看到除了Monet风格化对IBN-b影响稍大，其他几种影响非常之小。
 
 ![IBN-a在不同阶段加入IN](https://img-blog.csdnimg.cn/20200406134710339.png)
 
