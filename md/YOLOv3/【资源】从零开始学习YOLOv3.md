@@ -1,14 +1,16 @@
-# 从零开始学习YOLOv3教程
+# 从零开始学习SSD教程
 
-《从零开始学习YOLOv3》教程是首发于GiantPandaCV公众号的一个完整的系列，针对的是Github上ultralytics版本的yolov3进行的讲解，地址为：
+《从零开始学习SSD》教程是首发于GiantPandaCV公众号的一个完整的系列，针对的是Github上3.5k Star的SSD进行的讲解，地址为：
 
- https://github.com/ultralytics/yolov3 
+ https://github.com/amdegroot/ssd.pytorch/ 
 
-![](https://img-blog.csdnimg.cn/20200402153350848.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+![](https://img-blog.csdnimg.cn/2020041421475093.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-每一篇单独的文章都首发于GiantPandaCV公众号，这个系列完结后提供了pdf版方便大家学习，整理成独家资源《从零开始学习YOLOv3》教程。
+公众号将阅读SSD代码讲解整理成独家资源《从零开始学习SSD》教程。本教程由工作经验丰富、代码能力非常强的BBuf作者贡献，从数据下载到数据增强、从网络结构解析到loss分解，非常详细地讲解了SSD的代码。SSD的理论部分公众号中也有过详解：[目标检测算法之SSD](https://mp.weixin.qq.com/s?__biz=MzA4MjY4NTk0NQ==&mid=2247483996&idx=1&sn=8cc2c3075772239c534fcdfc68b4f63d&chksm=9f80b8caa8f731dc75d70f6a2cc02576ccc460893d10c3b7c1ef391adba9a5faa960c39c601b&scene=21#wechat_redirect ) 配合食用更佳。
 
-![从零开始学习YOLOv3教程封面](https://img-blog.csdnimg.cn/20200402152409631.png?x-oss-rocess=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+
+![从零开始学习SSD教程封面](https://img-blog.csdnimg.cn/20200414214553608.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
 
 
@@ -18,26 +20,26 @@
 
 公众号在短时间内产出了大量高质量的**原创**干货文章，并被各大公众号广泛转载，并且我们拥有引以为傲的高质量交流群，在这里你能找到**棘手问题的解决方法**、能够学习**部署深度学习模型**、能够得到各路大佬的**免费指导**。
 
-
-
 ### 资源内容
 
-以下内容是教程的核心脉络，需要说明的是ultralytics经常进行版本变动，添加各种新的特性，所以笔者fork了一份较早版本的，其中核心部分会有一些中文注释，另外也添加了原版中没有的**注意力机制或者模块**比如：SE、CBAM、BIFPN、ASPP、空洞卷积、PPM、SK、RFB、mobilenetv2、深度可分离卷积、检测后级联分类器等新的特性。
+资源目录如下：
 
-代码地址如下： https://github.com/GiantPandaCV/yolov3-point
+![](https://img-blog.csdnimg.cn/20200414215606540.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-![教程框架](https://img-blog.csdnimg.cn/20200402154817202.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
-
-
+![](https://img-blog.csdnimg.cn/20200414215652491.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
 部分内容预览：
 
-![](https://img-blog.csdnimg.cn/20200402155717992.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+![](https://img-blog.csdnimg.cn/20200414214908331.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-![](https://img-blog.csdnimg.cn/20200402155826538.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+
+![](https://img-blog.csdnimg.cn/20200414214949570.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+![](https://img-blog.csdnimg.cn/20200414215056472.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
 ### 资源获取方式
 
-关注公众号：GiantPandaCV, 后台回复yolov3, 即可获取pdf电子版资源。
+关注公众号：GiantPandaCV, 后台回复SSD, 即可免费获取pdf电子版资源。
 
 ![长按关注GiantPandaCV公众号](https://img-blog.csdnimg.cn/20200116212417846.jpg)
