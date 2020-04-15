@@ -103,15 +103,9 @@ outputs = self.deepsort.update(bbox_xcycwh, cls_conf, im)#通过接收目标检�
 
 通过类图，对整体模块有了框架上理解，下面深入理解一下这些模块。
 
-### 4.1 流程图
+### 4.2 核心类
 
-
-
-![知乎@猫弟](https://img-blog.csdnimg.cn/2020041418343015.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
-
-这个真的非常感谢知乎@猫弟总结的流程图，讲解非常地清晰，如果单纯看代码，非常容易混淆。比如说代价矩阵的计算这部分，连续套了三个函数，才被真正调用。上图将整体流程总结地非常棒。笔者将跟着流程图+类图来进行代码地讲解。
-
-### 4.2 Detection类&Track类
+**Detection类**
 
 ```python
 class Detection(object):
@@ -145,9 +139,437 @@ Detection类用于保存通过目标检测器得到的一个检测框，包含to
 - tlbr: 代表左上角坐标+右下角坐标
 - xyah: 代表中心坐标+宽高比+高
 
+**Track类**
+
+```python
+class Track:
+    # 一个轨迹的信息，包含(x,y,a,h) & v
+    """
+    A single target track with state space `(x, y, a, h)` and associated
+    velocities, where `(x, y)` is the center of the bounding box, `a` is the
+    aspect ratio and `h` is the height.
+    """
+
+    def __init__(self, mean, covariance, track_id, n_init, max_age,
+                 feature=None):
+        # max age是一个存活期限，默认为70帧,在
+        self.mean = mean
+        self.covariance = covariance
+        self.track_id = track_id
+        self.hits = 1 
+        # hits和n_init进行比较
+        # hits每次update的时候进行一次更新（只有match的时候才进行update）
+        # hits代表匹配上了多少次，匹配次数超过n_init就会设置为confirmed状态
+        self.age = 1 # 没有用到，和time_since_update功能重复
+        self.time_since_update = 0
+        # 每次调用predict函数的时候就会+1
+        # 每次调用update函数的时候就会设置为0
+
+        self.state = TrackState.Tentative
+        self.features = []
+        # 每个track对应多个features, 每次更新都将最新的feature添加到列表中
+        if feature is not None:
+            self.features.append(feature)
+
+        self._n_init = n_init  # 如果连续n_init帧都没有出现失配，设置为deleted状态
+        self._max_age = max_age  # 上限
+```
+
+Track类主要存储的是轨迹信息，mean和covariance是保存的框的位置和速度信息，track_id代表分配给这个轨迹的ID。state代表框的状态，有三种：
+
+- Tentative: 不确定态，这种状态会在初始化一个Track的时候分配，并且只有在连续匹配上n_init帧才会转变为确定态。如果在处于不确定态的情况下没有匹配上任何detection，那将转变为删除态。
+- Confirmed: 确定态，代表该Track确实处于匹配状态。如果当前Track属于确定态，但是失配连续达到max age次数的时候，就会被转变为删除态。
+- Deleted: 删除态，说明该Track已经失效。
+
+![状态转换图](https://img-blog.csdnimg.cn/20200415100437671.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+**max_age**代表一个Track存活期限，他需要和time_since_update变量进行比对。time_since_update是每次轨迹调用predict函数的时候就会+1，每次调用predict的时候就会重置为0，也就是说如果一个轨迹长时间没有update(没有匹配上)的时候，就会不断增加，直到time_since_update超过max age(默认70)，将这个Track从Tracker中的列表删除。
+
+**hits**代表连续确认多少次，用在从不确定态转为确定态的时候。每次Track进行update的时候，hits就会+1, 如果hits>n_init(默认为3)，也就是连续三帧的该轨迹都得到了匹配，这时候才将不确定态转为确定态。
+
+需要说明的是每个轨迹还有一个重要的变量，**features**列表，存储该轨迹在不同帧对应位置通过ReID提取到的特征。为何要保存这个列表，而不是将其更新为当前最新的特征呢？这是为了解决目标被遮挡后再次出现的问题，需要从以往帧对应的特征进行匹配。另外，如果特征过多会严重拖慢计算速度，所以有一个参数**budget**用来控制特征列表的长度，取最新的budget个features,将旧的删除掉。
+
+**ReID特征提取部分**
+
+ReID网络是独立于目标检测和跟踪器的模块，功能是提取对应bounding box中的feature,得到一个固定维度的embedding作为该bbox的代表，供计算相似度时使用。
+
+```python
+class Extractor(object):
+    def __init__(self, model_name, model_path, use_cuda=True):
+        self.net = build_model(name=model_name,
+                               num_classes=96)
+        self.device = "cuda" if torch.cuda.is_available(
+        ) and use_cuda else "cpu"
+        state_dict = torch.load(model_path)['net_dict']
+        self.net.load_state_dict(state_dict)
+        print("Loading weights from {}... Done!".format(model_path))
+        self.net.to(self.device)
+        self.size = (128,128)
+        self.norm = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize([0.3568, 0.3141, 0.2781],
+                                 [0.1752, 0.1857, 0.1879])
+        ])
+
+    def _preprocess(self, im_crops):
+        """
+        TODO:
+            1. to float with scale from 0 to 1
+            2. resize to (64, 128) as Market1501 dataset did
+            3. concatenate to a numpy array
+            3. to torch Tensor
+            4. normalize
+        """
+        def _resize(im, size):
+            return cv2.resize(im.astype(np.float32) / 255., size)
+
+        im_batch = torch.cat([
+            self.norm(_resize(im, self.size)).unsqueeze(0) for im in im_crops
+        ],dim=0).float()
+        return im_batch
+
+    def __call__(self, im_crops):
+        im_batch = self._preprocess(im_crops)
+        with torch.no_grad():
+            im_batch = im_batch.to(self.device)
+            features = self.net(im_batch)
+        return features.cpu().numpy()
+```
+
+模型训练是按照传统ReID的方法进行，使用Extractor类的时候输入为一个list的图片，得到图片对应的特征。
+
+**NearestNeighborDistanceMetric类**
+
+这个类中用到了几个计算距离的函数：
+
+1. 计算欧氏距离
+
+```python
+def _pdist(a, b):
+    # 用于计算成对的平方距离
+    # a NxM 代表N个对象，每个对象有M个数值作为embedding进行比较
+    # b LxM 代表L个对象，每个对象有M个数值作为embedding进行比较
+    # 返回的是NxL的矩阵，比如dist[i][j]代表a[i]和b[j]之间的平方和距离
+    # 实现见：https://blog.csdn.net/frankzd/article/details/80251042
+    a, b = np.asarray(a), np.asarray(b)  # 拷贝一份数据
+    if len(a) == 0 or len(b) == 0:
+        return np.zeros((len(a), len(b)))
+    a2, b2 = np.square(a).sum(axis=1), np.square(
+        b).sum(axis=1)  # 求每个embedding的平方和
+    # sum(N) + sum(L) -2 x [NxM]x[MxL] = [NxL]
+    r2 = -2. * np.dot(a, b.T) + a2[:, None] + b2[None, :]
+    r2 = np.clip(r2, 0., float(np.inf))
+    return r2
+```
+
+![图源自csdn博客](https://img-blog.csdnimg.cn/20200415153858938.png)
+
+2. 计算余弦距离
+
+```python
+def _cosine_distance(a, b, data_is_normalized=False):
+    # a和b之间的余弦距离
+    # a : [NxM] b : [LxM]
+    # 余弦距离 = 1 - 余弦相似度
+    # https://blog.csdn.net/u013749540/article/details/51813922
+    if not data_is_normalized:
+        # 需要将余弦相似度转化成类似欧氏距离的余弦距离。
+        a = np.asarray(a) / np.linalg.norm(a, axis=1, keepdims=True)
+        #  np.linalg.norm 操作是求向量的范式，默认是L2范式，等同于求向量的欧式距离。
+        b = np.asarray(b) / np.linalg.norm(b, axis=1, keepdims=True)
+    return 1. - np.dot(a, b.T)
+```
+
+![图源csdn博客](https://img-blog.csdnimg.cn/20200415154105562.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+以上代码对应公式，注意**余弦距离=1-余弦相似度**。
+
+最近邻距离度量类：
+
+```python
+class NearestNeighborDistanceMetric(object):
+    # 对于每个目标，返回一个最近的距离
+    def __init__(self, metric, matching_threshold, budget=None):
+        # 默认matching_threshold = 0.2 budge = 100
+        if metric == "euclidean":
+            # 使用最近邻欧氏距离
+            self._metric = _nn_euclidean_distance
+        elif metric == "cosine":
+            # 使用最近邻余弦距离
+            self._metric = _nn_cosine_distance
+        else:
+            raise ValueError("Invalid metric; must be either 'euclidean' or 'cosine'")
+
+        self.matching_threshold = matching_threshold
+        # 在级联匹配的函数中调用
+        self.budget = budget
+        # budge 预算，控制feature的多少
+        self.samples = {}
+        # samples是一个字典{id->feature list}
+
+    def partial_fit(self, features, targets, active_targets):
+        # 作用：部分拟合，用新的数据更新测量距离
+        # 调用：在特征集更新模块部分调用，tracker.update()中
+        for feature, target in zip(features, targets):
+            self.samples.setdefault(target, []).append(feature)
+            # 对应目标下添加新的feature，更新feature集合
+            # 目标id  :  feature list
+            if self.budget is not None:
+                self.samples[target] = self.samples[target][-self.budget:]
+            # 设置预算，每个类最多多少个目标，超过直接忽略
+
+        # 筛选激活的目标
+        self.samples = {k: self.samples[k] for k in active_targets}
+
+    def distance(self, features, targets):
+        # 作用：比较feature和targets之间的距离，返回一个代价矩阵
+        # 调用：在匹配阶段，将distance封装为gated_metric,
+        #       进行外观信息(reid得到的深度特征)+
+        #       运动信息(马氏距离用于度量两个分布相似程度)
+        cost_matrix = np.zeros((len(targets), len(features)))
+        for i, target in enumerate(targets):
+            cost_matrix[i, :] = self._metric(self.samples[target], features)
+        return cost_matrix
+```
+
+**Tracker类**
+
+Tracker类是最核心的类，Tracker中保存了所有的轨迹信息，负责初始化第一帧的轨迹、卡尔曼滤波的预测和更新、负责级联匹配、IOU匹配等等核心工作。
+
+```python
+class Tracker:
+    # 是一个多目标tracker，保存了很多个track轨迹
+    # 负责调用卡尔曼滤波来预测track的新状态+进行匹配工作+初始化第一帧
+    # Tracker调用update或predict的时候，其中的每个track也会各自调用自己的update或predict
+    """
+    This is the multi-target tracker.
+    """
+
+    def __init__(self, metric, max_iou_distance=0.7, max_age=70, n_init=3):
+        # 调用的时候，后边的参数全部是默认的
+        self.metric = metric 
+        # metric是一个类，用于计算距离(余弦距离或马氏距离)
+        self.max_iou_distance = max_iou_distance
+        # 最大iou，iou匹配的时候使用
+        self.max_age = max_age
+        # 直接指定级联匹配的cascade_depth参数
+        self.n_init = n_init
+        # n_init代表需要n_init次数的update才会将track状态设置为confirmed
+
+        self.kf = kalman_filter.KalmanFilter()# 卡尔曼滤波器
+        self.tracks = [] # 保存一系列轨迹
+        self._next_id = 1 # 下一个分配的轨迹id
+	def predict(self):
+        # 遍历每个track都进行一次预测
+        """Propagate track state distributions one time step forward.
+
+        This function should be called once every time step, before `update`.
+        """
+        for track in self.tracks:
+            track.predict(self.kf)
+```
+
+然后来看最核心的update函数和match函数，可以对照下面的流程图一起看：
+
+**update函数**
+
+```python
+def update(self, detections):
+    # 进行测量的更新和轨迹管理
+    """Perform measurement update and track management.
+
+    Parameters
+    ----------
+    detections : List[deep_sort.detection.Detection]
+        A list of detections at the current time step.
+
+    """
+    # Run matching cascade.
+    matches, unmatched_tracks, unmatched_detections = \
+        self._match(detections)
+
+    # Update track set.
+    # 1. 针对匹配上的结果
+    for track_idx, detection_idx in matches:
+        # track更新对应的detection
+        self.tracks[track_idx].update(self.kf, detections[detection_idx])
+
+    # 2. 针对未匹配的tracker,调用mark_missed标记
+    # track失配，若待定则删除，若update时间很久也删除
+    # max age是一个存活期限，默认为70帧
+    for track_idx in unmatched_tracks:
+        self.tracks[track_idx].mark_missed()
+
+    # 3. 针对未匹配的detection， detection失配，进行初始化
+    for detection_idx in unmatched_detections:
+        self._initiate_track(detections[detection_idx])
+
+    # 得到最新的tracks列表，保存的是标记为confirmed和Tentative的track
+    self.tracks = [t for t in self.tracks if not t.is_deleted()]
+
+    # Update distance metric.
+    active_targets = [t.track_id for t in self.tracks if t.is_confirmed()]
+    # 获取所有confirmed状态的track id
+    features, targets = [], []
+    for track in self.tracks:
+        if not track.is_confirmed():
+            continue
+        features += track.features  # 将tracks列表拼接到features列表
+        # 获取每个feature对应的track id
+        targets += [track.track_id for _ in track.features]
+        track.features = []
+
+    # 距离度量中的 特征集更新
+    self.metric.partial_fit(np.asarray(features), np.asarray(targets),
+                            active_targets)
+```
+
+**匹配函数：**
+
+```python
+def _match(self, detections):
+    # 主要功能是进行匹配，找到匹配的，未匹配的部分
+    def gated_metric(tracks, dets, track_indices, detection_indices):
+        # 功能： 用于计算track和detection之间的距离，代价函数
+        #        需要使用在KM算法之前
+        # 调用：
+        # cost_matrix = distance_metric(tracks, detections,
+        #                  track_indices, detection_indices)
+        features = np.array([dets[i].feature for i in detection_indices])
+        targets = np.array([tracks[i].track_id for i in track_indices])
+
+        # 1. 通过最近邻计算出代价矩阵 cosine distance
+        cost_matrix = self.metric.distance(features, targets)
+        # 2. 计算马氏距离,得到新的状态矩阵
+        cost_matrix = linear_assignment.gate_cost_matrix(
+            self.kf, cost_matrix, tracks, dets, track_indices,
+            detection_indices)
+        return cost_matrix
+
+    # Split track set into confirmed and unconfirmed tracks.
+    # 划分不同轨迹的状态
+    confirmed_tracks = [
+        i for i, t in enumerate(self.tracks) if t.is_confirmed()
+    ]
+    unconfirmed_tracks = [
+        i for i, t in enumerate(self.tracks) if not t.is_confirmed()
+    ]
+
+    # 进行级联匹配，得到匹配的track、不匹配的track、不匹配的detection
+    '''
+    !!!!!!!!!!!
+    级联匹配
+    !!!!!!!!!!!
+    '''
+    # gated_metric->cosine distance
+    # 仅仅对确定态的轨迹进行级联匹配
+    matches_a, unmatched_tracks_a, unmatched_detections = \
+        linear_assignment.matching_cascade(
+            gated_metric,
+            self.metric.matching_threshold,
+            self.max_age,
+            self.tracks,
+            detections,
+            confirmed_tracks)
+
+    # 将所有状态为未确定态的轨迹和刚刚没有匹配上的轨迹组合为iou_track_candidates，
+    # 进行IoU的匹配
+    iou_track_candidates = unconfirmed_tracks + [
+        k for k in unmatched_tracks_a
+        if self.tracks[k].time_since_update == 1  # 刚刚没有匹配上
+    ]
+    # 未匹配
+    unmatched_tracks_a = [
+        k for k in unmatched_tracks_a
+        if self.tracks[k].time_since_update != 1  # 已经很久没有匹配上
+    ]
+
+    '''
+    !!!!!!!!!!!
+    IOU 匹配
+    对级联匹配中还没有匹配成功的目标再进行IoU匹配
+    !!!!!!!!!!!
+    '''
+    # 虽然和级联匹配中使用的都是min_cost_matching作为核心，
+    # 这里使用的metric是iou cost和以上不同
+    matches_b, unmatched_tracks_b, unmatched_detections = \
+        linear_assignment.min_cost_matching(
+            iou_matching.iou_cost,
+            self.max_iou_distance,
+            self.tracks,
+            detections,
+            iou_track_candidates,
+            unmatched_detections)
+
+    matches = matches_a + matches_b  # 组合两部分match得到的结果
+
+    unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
+    return matches, unmatched_tracks, unmatched_detections
+```
+
+以上两部分结合注释和以下流程图可以更容易理解。
+
+![图片来自知乎Harlek](https://img-blog.csdnimg.cn/20200412221106751.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+然后紧接着看看级联匹配内部具体实现：
+
+![论文中的级联匹配的伪代码](https://img-blog.csdnimg.cn/20200415164956351.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+```
+
+```
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+![知乎@猫弟总结的deep sort流程图](https://img-blog.csdnimg.cn/2020041418343015.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+这个真的非常感谢知乎@猫弟总结的流程图，讲解非常地清晰，如果单纯看代码，非常容易混淆。比如说代价矩阵的计算这部分，连续套了三个函数，才被真正调用。上图将整体流程总结地非常棒。笔者将跟着流程图+类图来进行代码地讲解。
 
 
 
