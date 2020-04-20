@@ -224,9 +224,269 @@ class Bottleneck(nn.Module):
         return out
 ```
 
-HighResolutionModule,这是核心模块。
+HighResolutionModule,这是核心模块, 主要分为两个组件：branches和fuse layer。
 
-![HighResolutionModule核心实现](https://img-blog.csdnimg.cn/20200419230013844.png)
+![](https://img-blog.csdnimg.cn/20200420112718436.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+```python
+class HighResolutionModule(nn.Module):
+    def __init__(self, num_branches, blocks, num_blocks, num_inchannels,
+                 num_channels, fuse_method, multi_scale_output=True):
+        '''
+        调用：
+        # 调用高低分辨率交互模块， stage2 为例
+        HighResolutionModule(num_branches, # 2
+                             block, # 'BASIC'
+                             num_blocks, # [4, 4]
+                             num_inchannels, # 上个stage的out channel
+                             num_channels, # [32, 64]
+                             fuse_method, # SUM
+                             reset_multi_scale_output)
+        '''
+        super(HighResolutionModule, self).__init__()
+        self._check_branches(
+            # 检查分支数目是否合理
+            num_branches, blocks, num_blocks, num_inchannels, num_channels)
+
+        self.num_inchannels = num_inchannels
+        # 融合选用相加的方式
+        self.fuse_method = fuse_method
+        self.num_branches = num_branches
+
+        self.multi_scale_output = multi_scale_output
+
+        # 两个核心部分，一个是branches构建，一个是融合layers构建
+        self.branches = self._make_branches(
+            num_branches, blocks, num_blocks, num_channels)
+        self.fuse_layers = self._make_fuse_layers()
+
+        self.relu = nn.ReLU(False)
+
+    def _check_branches(self, num_branches, blocks, num_blocks,
+                        num_inchannels, num_channels):
+        # 分别检查参数是否符合要求,看models.py中的参数，blocks参数冗余了
+        if num_branches != len(num_blocks):
+            error_msg = 'NUM_BRANCHES({}) <> NUM_BLOCKS({})'.format(
+                num_branches, len(num_blocks))
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        if num_branches != len(num_channels):
+            error_msg = 'NUM_BRANCHES({}) <> NUM_CHANNELS({})'.format(
+                num_branches, len(num_channels))
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        if num_branches != len(num_inchannels):
+            error_msg = 'NUM_BRANCHES({}) <> NUM_INCHANNELS({})'.format(
+                num_branches, len(num_inchannels))
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+    def _make_one_branch(self, branch_index, block, num_blocks, num_channels,
+                         stride=1):
+        # 构建一个分支，一个分支重复num_blocks个block
+        downsample = None
+
+        # 这里判断，如果通道变大(分辨率变小)，则使用下采样
+        if stride != 1 or \
+           self.num_inchannels[branch_index] != num_channels[branch_index] * block.expansion:
+            downsample = nn.Sequential(
+                nn.Conv2d(self.num_inchannels[branch_index],
+                          num_channels[branch_index] * block.expansion,
+                          kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(num_channels[branch_index] * block.expansion,
+                               momentum=BN_MOMENTUM),
+            )
+
+        layers = []
+        layers.append(block(self.num_inchannels[branch_index],
+                            num_channels[branch_index], stride, downsample))
+
+        self.num_inchannels[branch_index] = \
+            num_channels[branch_index] * block.expansion
+
+        for i in range(1, num_blocks[branch_index]):
+            layers.append(block(self.num_inchannels[branch_index],
+                                num_channels[branch_index]))
+
+        return nn.Sequential(*layers)
+
+    def _make_branches(self, num_branches, block, num_blocks, num_channels):
+        branches = []
+        
+        # 通过循环构建多分支，每个分支属于不同的分辨率
+        for i in range(num_branches):
+            branches.append(
+                self._make_one_branch(i, block, num_blocks, num_channels))
+
+        return nn.ModuleList(branches)
+
+    def _make_fuse_layers(self):
+        if self.num_branches == 1:
+            return None
+
+        num_branches = self.num_branches # 2
+        num_inchannels = self.num_inchannels
+        fuse_layers = []
+        for i in range(num_branches if self.multi_scale_output else 1):
+            # i代表枚举所有分支
+            fuse_layer = []
+            for j in range(num_branches):
+                # j代表处理的当前分支
+                if j > i: # 进行上采样，使用最近邻插值
+                    fuse_layer.append(nn.Sequential(
+                        nn.Conv2d(num_inchannels[j],
+                                  num_inchannels[i],
+                                  1,
+                                  1,
+                                  0,
+                                  bias=False),
+                        nn.BatchNorm2d(num_inchannels[i],
+                                       momentum=BN_MOMENTUM),
+                        nn.Upsample(scale_factor=2**(j-i), mode='nearest')))
+                elif j == i:
+                    # 本层不做处理
+                    fuse_layer.append(None)
+                else:
+                    conv3x3s = []
+                    # 进行strided 3x3 conv下采样,如果跨两层，就使用两次strided 3x3 conv
+                    for k in range(i-j):
+                        if k == i - j - 1:
+                            num_outchannels_conv3x3 = num_inchannels[i]
+                            conv3x3s.append(nn.Sequential(
+                                nn.Conv2d(num_inchannels[j],
+                                          num_outchannels_conv3x3,
+                                          3, 2, 1, bias=False),
+                                nn.BatchNorm2d(num_outchannels_conv3x3,
+                                               momentum=BN_MOMENTUM)))
+                        else:
+                            num_outchannels_conv3x3 = num_inchannels[j]
+                            conv3x3s.append(nn.Sequential(
+                                nn.Conv2d(num_inchannels[j],
+                                          num_outchannels_conv3x3,
+                                          3, 2, 1, bias=False),
+                                nn.BatchNorm2d(num_outchannels_conv3x3,
+                                nn.ReLU(False)))
+                    fuse_layer.append(nn.Sequential(*conv3x3s))
+            fuse_layers.append(nn.ModuleList(fuse_layer))
+
+        return nn.ModuleList(fuse_layers)
+
+    def get_num_inchannels(self):
+        return self.num_inchannels
+
+    def forward(self, x):
+        if self.num_branches == 1:
+            return [self.branches[0](x[0])]
+
+        for i in range(self.num_branches):
+            x[i]=self.branches[i](x[i])
+
+        x_fuse=[]
+        for i in range(len(self.fuse_layers)):
+            y=x[0] if i == 0 else self.fuse_layers[i][0](x[0])
+            for j in range(1, self.num_branches):
+                if i == j:
+                    y=y + x[j]
+                else:
+                    y=y + self.fuse_layers[i][j](x[j])
+            x_fuse.append(self.relu(y))
+
+        # 将fuse以后的多个分支结果保存到list中
+        return x_fuse
+```
+
+models.py中保存的参数, 可以通过这些配置来改变模型的容量、分支个数、特征融合方法：
+
+```python
+# high_resoluton_net related params for classification
+POSE_HIGH_RESOLUTION_NET = CN()
+POSE_HIGH_RESOLUTION_NET.PRETRAINED_LAYERS = ['*']
+POSE_HIGH_RESOLUTION_NET.STEM_INPLANES = 64
+POSE_HIGH_RESOLUTION_NET.FINAL_CONV_KERNEL = 1
+POSE_HIGH_RESOLUTION_NET.WITH_HEAD = True
+
+POSE_HIGH_RESOLUTION_NET.STAGE2 = CN()
+POSE_HIGH_RESOLUTION_NET.STAGE2.NUM_MODULES = 1
+POSE_HIGH_RESOLUTION_NET.STAGE2.NUM_BRANCHES = 2
+POSE_HIGH_RESOLUTION_NET.STAGE2.NUM_BLOCKS = [4, 4]
+POSE_HIGH_RESOLUTION_NET.STAGE2.NUM_CHANNELS = [32, 64]
+POSE_HIGH_RESOLUTION_NET.STAGE2.BLOCK = 'BASIC'
+POSE_HIGH_RESOLUTION_NET.STAGE2.FUSE_METHOD = 'SUM'
+
+POSE_HIGH_RESOLUTION_NET.STAGE3 = CN()
+POSE_HIGH_RESOLUTION_NET.STAGE3.NUM_MODULES = 1
+POSE_HIGH_RESOLUTION_NET.STAGE3.NUM_BRANCHES = 3
+POSE_HIGH_RESOLUTION_NET.STAGE3.NUM_BLOCKS = [4, 4, 4]
+POSE_HIGH_RESOLUTION_NET.STAGE3.NUM_CHANNELS = [32, 64, 128]
+POSE_HIGH_RESOLUTION_NET.STAGE3.BLOCK = 'BASIC'
+POSE_HIGH_RESOLUTION_NET.STAGE3.FUSE_METHOD = 'SUM'
+
+POSE_HIGH_RESOLUTION_NET.STAGE4 = CN()
+POSE_HIGH_RESOLUTION_NET.STAGE4.NUM_MODULES = 1
+POSE_HIGH_RESOLUTION_NET.STAGE4.NUM_BRANCHES = 4
+POSE_HIGH_RESOLUTION_NET.STAGE4.NUM_BLOCKS = [4, 4, 4, 4]
+POSE_HIGH_RESOLUTION_NET.STAGE4.NUM_CHANNELS = [32, 64, 128, 256]
+POSE_HIGH_RESOLUTION_NET.STAGE4.BLOCK = 'BASIC'
+POSE_HIGH_RESOLUTION_NET.STAGE4.FUSE_METHOD = 'SUM'
+```
+
+然后来看整个HRNet模型的构建, 由于整体代码量太大，这里仅仅来看forward函数。
+
+```python
+def forward(self, x):
+
+    # 使用两个strided 3x3conv进行快速降维
+    x=self.relu(self.bn1(self.conv1(x)))
+    x=self.relu(self.bn2(self.conv2(x)))
+
+    # 构建了一串BasicBlock构成的模块
+    x=self.layer1(x)
+
+    # 然后是多个stage，每个stage核心是调用HighResolutionModule模块
+    x_list=[]
+    for i in range(self.stage2_cfg['NUM_BRANCHES']):
+        if self.transition1[i] is not None:
+            x_list.append(self.transition1[i](x))
+        else:
+            x_list.append(x)
+    y_list=self.stage2(x_list)
+
+    x_list=[]
+    for i in range(self.stage3_cfg['NUM_BRANCHES']):
+        if self.transition2[i] is not None:
+            x_list.append(self.transition2[i](y_list[-1]))
+        else:
+            x_list.append(y_list[i])
+    y_list=self.stage3(x_list)
+
+    x_list=[]
+    for i in range(self.stage4_cfg['NUM_BRANCHES']):
+        if self.transition3[i] is not None:
+            x_list.append(self.transition3[i](y_list[-1]))
+        else:
+            x_list.append(y_list[i])
+    y_list=self.stage4(x_list)
+
+    # 添加分类头，上文中有显示，在分类问题中添加这种头
+    # 在其他问题中换用不同的头
+    y=self.incre_modules[0](y_list[0])
+    for i in range(len(self.downsamp_modules)):
+        y=self.incre_modules[i+1](y_list[i+1]) + \
+            self.downsamp_modules[i](y)
+    y=self.final_layer(y)
+
+    if torch._C._get_tracing_state():
+        # 在不写C代码的情况下执行forward，直接用python版本
+        y=y.flatten(start_dim=2).mean(dim=2)
+    else:
+        y=F.avg_pool2d(y, kernel_size=y.size()
+                            [2:]).view(y.size(0), -1)
+    y=self.classifier(y)
+
+    return y
+```
 
 
 
