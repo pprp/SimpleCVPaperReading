@@ -1,14 +1,10 @@
-# HRNET
+# 全能Backbone:HRNet
 
-HRNet作者是微软亚洲研究院的王井东老师，
+HRNet是微软亚洲研究院的王井东老师领导的团队完成的，打通图像分类、图像分割、目标检测、人脸对齐、姿态识别、风格迁移、Image Inpainting、超分、optical flow、Depth estimation、边缘检测等网络结构。
 
-在ValseWebinar《物体和关键点检测》中亲自讲解了HRNet
+王老师在ValseWebinar《物体和关键点检测》中亲自讲解了HRNet，讲解地非常透彻，要比直接看论文更容易理解作者如何设计这个架构。
 
-打通图像分类、图像分割、目标检测、人脸对齐、姿态识别、风格迁移、Image Inpainting、超分、optical flow、Depth estimation、边缘检测等网络结构。
-
-HRNet学习高分辨率的表征
-
-
+以下文章主要参考了王老师在演讲中的解读，配合论文+代码部分，来为各位读者介绍一个全能的Backbone-HRNet。
 
 ## 1. 引入
 
