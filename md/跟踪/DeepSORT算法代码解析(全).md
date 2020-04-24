@@ -179,7 +179,7 @@ class Track:
         if feature is not None:
             self.features.append(feature)
 
-        self._n_init = n_init  # 如果连续n_init帧都没有出现失配，设置为deleted状态
+        self._n_init = n_init  # 如果连续n_init帧都没有出现匹配，设置为deleted状态
         self._max_age = max_age  # 上限
 ```
 
@@ -191,7 +191,7 @@ Track类主要存储的是轨迹信息，mean和covariance是保存的框的位�
 
 ![状态转换图](https://img-blog.csdnimg.cn/20200415100437671.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-**max_age**代表一个Track存活期限，他需要和time_since_update变量进行比对。time_since_update是每次轨迹调用predict函数的时候就会+1，每次调用predict的时候就会重置为0，也就是说如果一个轨迹长时间没有update(没有匹配上)的时候，就会不断增加，直到time_since_update超过max age(默认70)，将这个Track从Tracker中的列表删除。
+**max_age**代表一个Track存活期限，他需要和time_since_update变量进行比对。time_since_update是每次轨迹调用update函数的时候就会+1，每次调用predict的时候就会重置为0，也就是说如果一个轨迹长时间没有update(没有匹配上)的时候，就会不断增加，直到time_since_update超过max age(默认70)，将这个Track从Tracker中的列表删除。
 
 **hits**代表连续确认多少次，用在从不确定态转为确定态的时候。每次Track进行update的时候，hits就会+1, 如果hits>n_init(默认为3)，也就是连续三帧的该轨迹都得到了匹配，这时候才将不确定态转为确定态。
 

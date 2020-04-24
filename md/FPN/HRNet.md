@@ -1,10 +1,8 @@
-# 全能Backbone:HRNet
+# 打通多个视觉任务的全能Backbone:HRNet
 
 HRNet是微软亚洲研究院的王井东老师领导的团队完成的，打通图像分类、图像分割、目标检测、人脸对齐、姿态识别、风格迁移、Image Inpainting、超分、optical flow、Depth estimation、边缘检测等网络结构。
 
-王老师在ValseWebinar《物体和关键点检测》中亲自讲解了HRNet，讲解地非常透彻，要比直接看论文更容易理解作者如何设计这个架构。
-
-以下文章主要参考了王老师在演讲中的解读，配合论文+代码部分，来为各位读者介绍一个全能的Backbone-HRNet。
+王老师在ValseWebinar《物体和关键点检测》中亲自讲解了HRNet，讲解地非常透彻。以下文章主要参考了王老师在演讲中的解读，配合论文+代码部分，来为各位读者介绍这个全能的Backbone-HRNet。
 
 ## 1. 引入
 
@@ -71,7 +69,19 @@ HRNet是微软亚洲研究院的王井东老师领导的团队完成的，打通
 
 ## 3. 效果
 
-### 3.1 姿态识别任务上的表现
+### 3.1 消融实验
+
+1. 对交互方法进行消融实验，证明了当前跨分辨率的融合的有效性。
+
+![交互方法的消融实现](https://img-blog.csdnimg.cn/20200419174429487.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+2. 证明高分辨率feature map的表征能力
+
+![](https://img-blog.csdnimg.cn/20200419174654814.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+1x代表不进行降维，2x代表分辨率变为原来一半，4x代表分辨率变为原来四分之一。W32、W48中的32、48代表卷积的宽度或者通道数。
+
+### 3.2 姿态识别任务上的表现
 
 ![](https://img-blog.csdnimg.cn/20200419173518732.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
@@ -86,18 +96,6 @@ HRNet是微软亚洲研究院的王井东老师领导的团队完成的，打通
 在19年2月28日时的PoseTrack Leaderboard，HRNet占领两个项目的第一名。
 
 ![PoseTrack Leaderboard](https://img-blog.csdnimg.cn/2020041917420618.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
-
-### 3.2 消融实验
-
-1. 对交互方法进行消融实验，证明了当前跨分辨率的融合的有效性。
-
-![交互方法的消融实现](https://img-blog.csdnimg.cn/20200419174429487.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
-
-2. 证明高分辨率feature map的表征能力
-
-![](https://img-blog.csdnimg.cn/20200419174654814.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
-
-1x代表不进行降维，2x代表分辨率变为原来一半，4x代表分辨率变为原来四分之一。W32、W48中的32、48代表卷积的宽度或者通道数。
 
 ### 3.3 语义分割任务中的表现
 
@@ -119,7 +117,7 @@ HRNet是微软亚洲研究院的王井东老师领导的团队完成的，打通
 
 ![图像分类任务中和ResNet进行对比](https://img-blog.csdnimg.cn/20200419210900224.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-以上是HRNet和ResNet结果对比，同一个颜色的都是参数量大体一致的模型进行的对比，在参数两差不多甚至更少的情况下，HRNet能够比ResNet达到更好的效果。
+以上是HRNet和ResNet结果对比，同一个颜色的都是参数量大体一致的模型进行的对比，在参数量差不多甚至更少的情况下，HRNet能够比ResNet达到更好的效果。
 
 ## 4. 代码
 
@@ -484,8 +482,6 @@ def forward(self, x):
     return y
 ```
 
-
-
 ## 5. 总结
 
 HRNet核心方法是：在模型的整个过程中，保存高分辨率表征的同时使用让不同分辨率的feature map进行特征交互。
@@ -507,7 +503,7 @@ SELayer首先通过一个全局平均池化得到一个一维向量，然后通�
 可以看到上图用红色箭头串起来的是不是和SELayer很相似。为什么说SENet是HRNet的一个特例，但从这个结构来讲，可以这么看：
 
 - SENet没有像HRNet这样分辨率变为原来的一半，分辨率直接变为1x1，比较极端。变为1x1向量以后，SENet中使用了两个全连接网络来学习通道的特征分布；但是在HRNet中，使用了几个卷积(Residual block)来学习特征。
-- SENet在主干部分(高分辨率分支)没有安排卷积进行特征的学习；HRNet中主干部分(高分辨率分支)安排了几个卷积(Residual block)来学习特征。
+- SENet在主干部分(高分辨率分支)没有安排卷积进行特征的学习；HRNet在主干部分(高分辨率分支)安排了几个卷积(Residual block)来学习特征。
 - 特征融合部分SENet和HRNet区分比较大，SENet使用的对应通道相乘的方法，HRNet则使用的是相加。之所以说SENet是通道注意力机制是因为通过全局平均池化后没有了空间特征，只剩通道的特征；HRNet则可以看作同时保留了空间特征和通道特征，所以说HRNet不仅有通道注意力，同时也有空间注意力。
 
 HRNet团队有10人之多，构建了分类、分割、检测、关键点检测等库，工作量非常大，而且做了很多扎实的实验证明了这种思路的有效性。所以是否可以认为HRNet属于SENet之后又一个更优的backbone呢？还需要自己实践中使用这种想法和思路来验证。
