@@ -1,6 +1,6 @@
 # 【新手向】PyTorch实践之环境配置
 
-这是新手向的第一篇，讲的是PyTorch的环境配置，主要是CPU环境配置。
+这是新手向的第一篇，讲的是PyTorch的环境配置，主要是CPU、GPU环境配置。
 
 ## 一、Anaconda
 
