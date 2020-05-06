@@ -10,7 +10,7 @@ titlepage-text-color: "FFFFFF"
 titlepage-background: "background.pdf"
 ...
 
-# 零、序言
+# 0. 序言
 
 版权声明：此份电子书整理自公众号「 GiantPandaCV 」, 版权所有 GiantPandaCV , 禁止任何形式的转载, 禁止传播、商用, 违者必究！ 
 
