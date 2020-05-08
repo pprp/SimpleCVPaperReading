@@ -2,15 +2,15 @@
 
 # 【资源】DeepSORT原理及代码讲解电子书
 
-《Faster R-CNN原理及代码讲解》是首发于GiantPandaCV公众号的教程，针对陈云大佬实现的Faster R-CNN代码讲解，Github链接如下：
+《多目标跟踪快速入门教程》是首发于GiantPandaCV公众号的教程，针对pytorch版本的deep sort进行讲解，Github链接如下：
 
-https://github.com/chenyuntc/simple-faster-rcnn-pytorch
+https://github.com/pprp/deep_sort_yolov3_pytorch![Github截图](https://img-blog.csdnimg.cn/20200507225953502.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-![陈云版本的Faster RCNN]()
+![Readme](https://img-blog.csdnimg.cn/20200507230156693.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-电子书主要包括Faster R-CNN原理的梳理和代码讲解，包括数据预处理、RPN、网络构建、评价指标、后处理等内容。
+电子书主要包括多目标跟踪评价指标、标注工具DarkLabel、转换脚本、DeepSORT论文解析、核心代码解读。
 
-![封面]()
+![封面](https://img-blog.csdnimg.cn/2020050723030471.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
 
 
@@ -24,21 +24,21 @@ https://github.com/chenyuntc/simple-faster-rcnn-pytorch
 
 资源目录如下：
 
-![目录1]()
+![目录1](https://img-blog.csdnimg.cn/20200507230416509.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-![目录2]()
+![目录2](https://img-blog.csdnimg.cn/20200507230440506.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
 ### 部分内容预览
 
-![预览1]()
+![预览1](https://img-blog.csdnimg.cn/20200507231334393.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-![预览2]()
+![预览2](https://img-blog.csdnimg.cn/20200507231410510.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-![预览3]()
+![预览3](https://img-blog.csdnimg.cn/20200507233109710.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
 ### 资源获取方式
 
-在公众号GiantPandaCV后台回复Faster RCNN, 即可免费获取pdf电子版资源。这些资源是公众号作者们非常辛苦创作出来的，版权归GiantPandaCV公众号所有，不可用于私自牟利，感谢配合与支持。
+在公众号GiantPandaCV后台回复“deepsort”, 即可免费获取pdf电子版资源。这些资源是公众号作者们非常辛苦创作出来的，版权归GiantPandaCV公众号所有，不可用于私自牟利，感谢配合与支持。
 
 ![长按关注GiantPandaCV公众号](https://img-blog.csdnimg.cn/20200116212417846.jpg)
 
