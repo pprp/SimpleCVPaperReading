@@ -446,6 +446,12 @@ python test.py --log_name pascal_resdcn18_384_dp \
 
 笔者将已经改好的单类的CenterNet放在Github上：https://github.com/pprp/SimpleCVReproduction/tree/master/Simple_CenterNet
 
+## 5. 参考
+
+https://github.com/pprp/SimpleCVReproduction/tree/master/Simple_CenterNet
+
+https://github.com/zzzxxxttt/pytorch_simple_CenterNet_45
+
 
 
 
