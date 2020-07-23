@@ -54,15 +54,72 @@ $$
 
 ## 3. heatmap上应用高斯核
 
-heatmap
+heatmap上使用高斯核有很多需要注意的细节。CenterNet官方版本实际上是在CornerNet的基础上改动得到的，有很多祖传代码。
+
+在使用高斯核前要考虑这样一个问题，下图来自于CornerNet论文中的图示，红色的是标注框，但绿色的其实也可以作为最终的检测结果保留下来。那么这个问题可以转化为绿框在红框多大范围以内可以被接受。使用IOU来衡量红框和绿框的贴合程度，当两者IOU>0.7的时候，认为绿框也可以被接受，反之则不被接受。
+
+![图源CornerNet](https://img-blog.csdnimg.cn/20200722102906603.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+那么现在问题转化为，如何确定半径r, 让红框和绿框的IOU大于0.7。
 
 ![](https://img-blog.csdnimg.cn/20200721220135116.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
+以上是三种情况，其中蓝框代表标注框，橙色代表可能满足要求的框。这个问题最终变为了一个一元二次方程有解的问题，同时由于半径必须为正数，所以r的取值就可以通过求根公式获得。
 
+```python
+def gaussian_radius(det_size, min_overlap=0.7):
+    # gt框的长和宽
+    height, width = det_size
 
+    a1 = 1
+    b1 = (height + width)
+    c1 = width * height * (1 - min_overlap) / (1 + min_overlap)
+    sq1 = np.sqrt(b1 ** 2 - 4 * a1 * c1)
+    r1 = (b1 + sq1) / (2 * a1)
 
+    a2 = 4
+    b2 = 2 * (height + width)
+    c2 = (1 - min_overlap) * width * height
+    sq2 = np.sqrt(b2 ** 2 - 4 * a2 * c2)
+    r2 = (b2 + sq2) / (2 * a2)
 
+    a3 = 4 * min_overlap
+    b3 = -2 * min_overlap * (height + width)
+    c3 = (min_overlap - 1) * width * height
+    sq3 = np.sqrt(b3 ** 2 - 4 * a3 * c3)
+    r3 = (b3 + sq3) / (2 * a3)
+    
+    return min(r1, r2, r3)
+```
 
+可以看到这里的公式和上图计算的结果是一致的，需要说明的是，CornerNet最开始版本中这里出现了错误，分母不是2a，而是直接设置为2。CenterNet也延续了这个bug，CenterNet作者回应说这个bug对结果的影响不大，但是根据issue的讨论来看，有一些人通过修正这个bug以后，可以让AR提升1-3个百分点。
+
+```python
+def gaussian_radius(det_size, min_overlap=0.7):
+  height, width = det_size
+
+  a1  = 1
+  b1  = (height + width)
+  c1  = width * height * (1 - min_overlap) / (1 + min_overlap)
+  sq1 = np.sqrt(b1 ** 2 - 4 * a1 * c1)
+  r1  = (b1 + sq1) / 2
+
+  a2  = 4
+  b2  = 2 * (height + width)
+  c2  = (1 - min_overlap) * width * height
+  sq2 = np.sqrt(b2 ** 2 - 4 * a2 * c2)
+  r2  = (b2 + sq2) / 2
+
+  a3  = 4 * min_overlap
+  b3  = -2 * min_overlap * (height + width)
+  c3  = (min_overlap - 1) * width * height
+  sq3 = np.sqrt(b3 ** 2 - 4 * a3 * c3)
+  r3  = (b3 + sq3) / 2
+
+  return min(r1, r2, r3)
+```
+
+同时有一些人质疑这里 使用的是圆形，而不是椭圆，也有大佬在issue中给出了推导，感兴趣的可以看以下链接：https://github.com/princeton-vl/CornerNet/issues/110
 
 
 
@@ -73,3 +130,7 @@ https://zhuanlan.zhihu.com/p/66048276
 https://www.cnblogs.com/shine-lee/p/9671253.html
 
 https://zhuanlan.zhihu.com/p/96856635
+
+http://xxx.itp.ac.cn/pdf/1808.01244
+
+https://github.com/princeton-vl/CornerNet/issues/110
