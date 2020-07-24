@@ -92,7 +92,7 @@ def gaussian_radius(det_size, min_overlap=0.7):
     return min(r1, r2, r3)
 ```
 
-可以看到这里的公式和上图计算的结果是一致的，需要说明的是，CornerNet最开始版本中这里出现了错误，分母不是2a，而是直接设置为2。CenterNet也延续了这个bug，CenterNet作者回应说这个bug对结果的影响不大，但是根据issue的讨论来看，有一些人通过修正这个bug以后，可以让AR提升1-3个百分点。
+可以看到这里的公式和上图计算的结果是一致的，需要说明的是，CornerNet最开始版本中这里出现了错误，分母不是2a，而是直接设置为2。CenterNet也延续了这个bug，CenterNet作者回应说这个bug对结果的影响不大，但是根据issue的讨论来看，有一些人通过修正这个bug以后，可以让AR提升1-3个百分点。以下是有bug的版本，CornerNet最新版中已经修复了这个bug。
 
 ```python
 def gaussian_radius(det_size, min_overlap=0.7):
@@ -119,7 +119,28 @@ def gaussian_radius(det_size, min_overlap=0.7):
   return min(r1, r2, r3)
 ```
 
-同时有一些人质疑这里 使用的是圆形，而不是椭圆，也有大佬在issue中给出了推导，感兴趣的可以看以下链接：https://github.com/princeton-vl/CornerNet/issues/110
+同时有一些人认为圆并不普适，提出了使用椭圆来进行计算，也有人在issue中给出了推导，感兴趣的可以看以下链接：https://github.com/princeton-vl/CornerNet/issues/110
+
+
+
+
+
+```python
+import numpy as np
+y,x = np.ogrid[-4:5,-3:4]
+sigma = 1
+h=np.exp(-(x*x+y*y)/(2*sigma*sigma))
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+fig = plt.figure()
+ax = Axes3D(fig)
+ax.plot_surface(x,y,h)
+plt.show()
+```
+
+
+
+
 
 
 
