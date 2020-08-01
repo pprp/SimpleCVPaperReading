@@ -6,8 +6,6 @@ CenterNet(Objects as points)已经有一段时间了，之前这篇文章-[【�
 
 这篇博文主要讲解如何用这个版本的CenterNet训练自己的VOC数据集，环境的配置。
 
-[TOC]
-
 ## 1. 环境配置
 
 环境要求：
