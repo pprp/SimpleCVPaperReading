@@ -1,8 +1,8 @@
-# CenterNet的骨干网络之DLA-34
+# CenterNet的骨干网络之DLASeg
 
-DLA全称是Deep Layer Aggregation, 于2018年发表于CVPR。被CenterNet, FairMOT等框架所采用，并且**DLA-34得到的反响比较好**，准确率和模型复杂度平衡的比较好。
+DLA全称是Deep Layer Aggregation, 于2018年发表于CVPR。被CenterNet, FairMOT等框架所采用，其效果很不错，准确率和模型复杂度平衡的也比较好。
 
-CenterNet中使用的是在DLA-34的基础上添加了Deformable Convolution后的网络，先来看看Deep Layer Aggregation的理论基础。
+CenterNet中使用的DLASeg是在DLA-34的基础上添加了Deformable Convolution后的分割网络。
 
 ## 1. 简介
 
@@ -10,7 +10,7 @@ Aggretation聚合是目前设计网络结构的常用的一种技术。如何将
 
 目前常见的聚合方式有skip connection, 如ResNet，这种融合方式仅限于块内部，并且融合方式仅限于简单的叠加。
 
-本文提出了DLA的结构，能够迭代式地将网络结构地特征信息融合起来，让模型有更高的精度和更少的参数。
+本文提出了DLA的结构，能够迭代式地将网络结构的特征信息融合起来，让模型有更高的精度和更少的参数。
 
 ![DLA的设计思路](https://img-blog.csdnimg.cn/20200804202908321.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
@@ -33,7 +33,7 @@ Deep Layer Aggregation核心模块有两个IDA(Iterative Deep Aggregation)和HDA
 
 - 红色框代表的是用树结构链接的层次结构，能够更好地传播特征和梯度。
 
-- 黄色链接代表的是IDA，负责链接相邻两个stage地特征让深层和浅层的表达能更好地融合。
+- 黄色链接代表的是IDA，负责链接相邻两个stage的特征让深层和浅层的表达能更好地融合。
 - 蓝色连线代表进行了下采样，网络一开始也和ResNet一样进行了快速下采样。
 
 论文中也给了公式推导，感兴趣的可以去理解一下。本文还是将重点放在代码实现上。
@@ -338,9 +338,125 @@ class DLA(nn.Module):
             return x
 ```
 
+## 4. DLASeg
 
+DLASeg是在DLA的基础上使用Deformable Convolution和Upsample层组合进行信息提取，提升了空间分辨率。
 
-## Reference
+```python
+class DLASeg(nn.Module):
+    '''
+    DLASeg('dla{}'.format(num_layers), heads,
+                 pretrained=True,
+                 down_ratio=down_ratio,
+                 final_kernel=1,
+                 last_level=5,
+                 head_conv=head_conv)
+    '''
+    def __init__(self, base_name, heads, pretrained, down_ratio, final_kernel,
+                 last_level, head_conv, out_channel=0):
+        super(DLASeg, self).__init__()
+        assert down_ratio in [2, 4, 8, 16]
+        self.first_level = int(np.log2(down_ratio))
+        self.last_level = last_level
+        # globals() 函数会以字典类型返回当前位置的全部全局变量。
+        # 所以这个base就相当于原来的DLA34
+        self.base = globals()[base_name](pretrained=pretrained)
+        channels = self.base.channels
+        scales = [2 ** i for i in range(len(channels[self.first_level:]))]
+        # first_level = 2 if down_ratio=4
+        # channels = [16, 32, 64, 128, 256, 512] to [64, 128, 256, 512]
+        # scales = [1, 2, 4, 8]
+        self.dla_up = DLAUp(self.first_level, channels[self.first_level:], scales)
+
+        if out_channel == 0:
+            out_channel = channels[self.first_level]
+
+        # 进行上采样
+        self.ida_up = IDAUp(out_channel, channels[self.first_level:self.last_level], 
+                            [2 ** i for i in range(self.last_level - self.first_level)])
+        
+        self.heads = heads
+        for head in self.heads:
+            classes = self.heads[head]
+            if head_conv > 0:
+              fc = nn.Sequential(
+                  nn.Conv2d(channels[self.first_level], head_conv,
+                    kernel_size=3, padding=1, bias=True),
+                  nn.ReLU(inplace=True),
+                  nn.Conv2d(head_conv, classes, 
+                    kernel_size=final_kernel, stride=1, 
+                    padding=final_kernel // 2, bias=True))
+              if 'hm' in head:
+                fc[-1].bias.data.fill_(-2.19)
+              else:
+                fill_fc_weights(fc)
+            else:
+              fc = nn.Conv2d(channels[self.first_level], classes, 
+                  kernel_size=final_kernel, stride=1, 
+                  padding=final_kernel // 2, bias=True)
+              if 'hm' in head:
+                fc.bias.data.fill_(-2.19)
+              else:
+                fill_fc_weights(fc)
+            self.__setattr__(head, fc)
+    def forward(self, x):
+        x = self.base(x)
+        x = self.dla_up(x)
+        y = []
+        for i in range(self.last_level - self.first_level):
+            y.append(x[i].clone())
+        self.ida_up(y, 0, len(y))
+        z = {}
+        for head in self.heads:
+            z[head] = self.__getattr__(head)(y[-1])
+        return [z]
+```
+
+以上就是DLASeg的主要代码，其中负责上采样部分的是：
+
+```python
+ self.ida_up = IDAUp(out_channel, channels[self.first_level:self.last_level], 
+[2 ** i for i in range(self.last_level - self.first_level)])
+```
+
+这部分负责解码，将空间分辨率提高。
+
+```python
+class IDAUp(nn.Module):
+    '''
+    IDAUp(channels[j], in_channels[j:], scales[j:] // scales[j])
+    ida(layers, len(layers) -i - 2, len(layers))
+    '''
+    def __init__(self, o, channels, up_f):
+        super(IDAUp, self).__init__()
+        for i in range(1, len(channels)):
+            c = channels[i]
+            f = int(up_f[i])  
+            proj = DeformConv(c, o)
+            node = DeformConv(o, o)
+            up = nn.ConvTranspose2d(o, o, f * 2, stride=f, 
+                                    padding=f // 2, output_padding=0,
+                                    groups=o, bias=False)
+            fill_up_weights(up)
+            setattr(self, 'proj_' + str(i), proj)
+            setattr(self, 'up_' + str(i), up)
+            setattr(self, 'node_' + str(i), node)
+        
+    def forward(self, layers, startp, endp):
+        for i in range(startp + 1, endp):
+            upsample = getattr(self, 'up_' + str(i - startp))
+            project = getattr(self, 'proj_' + str(i - startp))
+
+            layers[i] = upsample(project(layers[i]))
+            node = getattr(self, 'node_' + str(i - startp))
+            layers[i] = node(layers[i] + layers[i - 1])
+```
+
+其核心是DLAUP和IDAUP, 这两个类中都使用了两个Deformable Convolution可变形卷积，然后使用ConvTranspose2d进行上采样，具体网络结构如下图所示。
+
+![DLASeg结构图](https://img-blog.csdnimg.cn/20200805203836322.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+## 5. Reference
 
 https://arxiv.org/abs/1707.06484
 
