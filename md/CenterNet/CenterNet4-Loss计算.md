@@ -1,4 +1,6 @@
-# CenterNet之loss计算
+# CenterNet之loss计算代码解析
+
+[GiantPandaCV导语] 本文主要讲解CenterNet的loss，由偏置部分（reg loss）、热图部分(heatmap loss)、宽高(wh loss)部分三部分loss组成，附代码实现。
 
 ## 1. 网络输出
 
@@ -88,7 +90,7 @@ p代表目标框中心点，R代表下采样倍数4，$\tilde{p}=\lfloor \frac{p
 
 
 
-### 2.3 size loss
+### 2.3 size loss/wh loss
 
 假设第k个目标，类别为$c_k$的目标框的表示为$(x_1^{(k)},y_1^{(k)},x_2^{(k)},y_2^{(k)})$，那么其中心点坐标位置为$(\frac{x_1^{(k)}+x_2^{(k)}}{2}, \frac{y_1^{(k)}+y_2^{(k)}}{2})$, 目标的长和宽大小为$s_k=(x_2^{(k)}-x_1^{(k)},y_2^{(k)}-y_1^{(k)})$。对长和宽进行训练的是L1 Loss函数：
 $$
@@ -180,7 +182,7 @@ def _neg_loss(preds, targets):
         neg_loss = neg_loss.sum()
 
         if num_pos == 0:
-            loss = loss - neg_loss
+            loss = loss - neg_loss # 只有负样本
         else:
             loss = loss - (pos_loss + neg_loss) / num_pos
     return loss / len(preds)
@@ -192,6 +194,8 @@ L_k=\frac{-1}{N}\sum_{xyc}\begin{cases}
 (1-Y_{xyc})^\beta(\hat{Y}_{xyc})^\alpha log(1-\hat{Y}_{xyc})& otherwise
 \end{cases}
 $$
+
+代码和以上公式一一对应，pos代表正样本，neg代表负样本。
 
 ### 3.2 reg & wh loss代码
 
@@ -208,21 +212,7 @@ def _reg_loss(regs, gt_regs, mask):
 ```
 
 
-
-
-
-
-
-### 3.3 wh loss代码
-
-
-
-
-
-
-
-
-## 参考
+## 4. 参考
 
 https://zhuanlan.zhihu.com/p/66048276
 
