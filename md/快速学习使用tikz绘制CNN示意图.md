@@ -2,7 +2,7 @@
 
 【GiantPandaCV导语】本文主要介绍最最最基础的tikz命令和一些绘制CNN时需要的基础的LaTeX知识，希望能在尽可能短的时间内学会并实现使用tikz这个LaTeX工具包来绘制卷积神经网络示意图。
 
-![https://github.com/HarisIqbal88/PlotNeuralNet](https://img-blog.csdnimg.cn/20200906204742819.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+![https://github.com/HarisIqbal88/PlotNeuralNet](https://img-blog.csdnimg.cn/2020090719313187.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
 之前看到tikz可以画出这种图，感觉特别专业，所以萌发出了解一下tikz的想法。
 
@@ -210,8 +210,6 @@ domain限制变量范围，然后可以画图，结果如下：
 
 输出结果就是：我喜欢你
 
-正菜开始：
-
 ```latex
 \newcommand{\networkLayer}[9]{
 	% Define the macro.
@@ -328,11 +326,160 @@ domain限制变量范围，然后可以画图，结果如下：
 
 ![可视化一个模块](https://img-blog.csdnimg.cn/20200906230034722.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
+卷积神经网络的示意图实际上是一个个立方体构成的，立方体之间可能会有额外连线，代表特征融合；还可能需要题注，为这个特征图立方体进行命名；必须要有立方体的位置信息，长宽高；还需要颜色填充的功能；
 
+综合以上需求，这个函数提供了9个参数分别是：
 
+- #1 H&W 控制立方体右侧这一面的高度，默认为正方形。
+- #2 Depth 控制深度
+- #3 X 方向上的偏置
+- #4 Y方向上的偏置
+- #5 Z方向上的偏置
+- #6 填充的颜色
+- #7 Text展示的文本，放在最下侧
+- #8 坐标名称，通过命名便于#9访问
+- #9 通过名称指定连接位置，用于连接前方层的时候使用
 
+![前两个参数示意图](https://img-blog.csdnimg.cn/20200907173212880.png#pic_center)
 
+由于每绘制一个立方体，右侧立方体的X偏置就应该加上左侧立方体的Depth值，这部分代码这样处理的。
 
+```latex
+\FPset{totalOffset}{0} % 设置全局变量totaloffset	
+\xdef\totalOffset{\totalOffset}
+\ifthenelse{\equal{#8} {start}}
+% 如果#8坐标名称为start，那么将totaloffset归零
+{\FPset{totalOffset}{0}}
+{}% 否则什么都不做
+\FPeval\currentOffset{0+(totalOffset)+(#3)}
+% 计算当前offset也就是#3 X+totalOffset
+```
+
+赋值过程：
+
+```latex
+\def\hw{#1} % Used to distinguish input resolution for current layer.
+\def\b{0.02}
+\def\c{#2} % Width of the cube to distinguish number of input channels for current layer.
+\def\x{\currentOffset} % X offset for current layer.
+\def\y{#4} % Y offset for current layer.
+\def\z{#5} % Z offset for current layer.
+\def\inText{#7}
+```
+
+计算立方体表面坐标(将点可视化是额外添加的，为了便于理解)
+
+![](https://img-blog.csdnimg.cn/20200907174034974.png#pic_center)
+
+```latex
+% Define references to points on the cube surfaces
+\coordinate (#8_front) at  (\x+\c  , \z      , \y);
+\coordinate (#8_back) at   (\x     , \z      , \y);
+\coordinate (#8_top) at    (\x+\c/2, \z+\hw/2, \y);
+\coordinate (#8_bottom) at (\x+\c/2, \z-\hw/2, \y);
+```
+
+计算7个顶点位置，被挡住的也可以计算，但是因为这里不打算绘制所以不计算。
+
+![7个顶点示意图](https://img-blog.csdnimg.cn/20200907174636106.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+```python
+% Define cube coords
+\coordinate (blr) at (\c+\x,  -\hw/2+\z,  -\hw/2+\y); %back lower right
+\coordinate (bur) at (\c+\x,   \hw/2+\z,  -\hw/2+\y); %back upper right
+\coordinate (bul) at (0 +\x,   \hw/2+\z,  -\hw/2+\y); %back upper left
+\coordinate (fll) at (0 +\x,  -\hw/2+\z,   \hw/2+\y); %front lower left
+\coordinate (flr) at (\c+\x,  -\hw/2+\z,   \hw/2+\y); %front lower right
+\coordinate (fur) at (\c+\x,   \hw/2+\z,   \hw/2+\y); %front upper right
+\coordinate (ful) at (0 +\x,   \hw/2+\z,   \hw/2+\y); %front upper left
+```
+
+绘制立方块之间的连线：
+
+```latex
+% Draw connections from other points to the back of this node
+\ifthenelse{\equal{#9} {}}
+{} % 为空什么都不做
+{ % 非空 开始画层与层之间的连线
+\foreach \val in #9
+% \val = start_front
+\draw[line width=0.3mm] (\val)--(#8_back);
+}
+```
+
+绘制立方体主体部分，也就是将7个点连接起来。
+
+```latex
+% back plane
+\draw[line width=0.3mm](blr) -- (bur) -- (bul);
+% front plane
+\draw[line width=0.3mm](fll) -- (flr) node[midway,below] {\inText} -- (fur) -- (ful) -- (fll);
+\draw[line width=0.3mm](blr) -- (flr);
+\draw[line width=0.3mm](bur) -- (fur);
+\draw[line width=0.3mm](bul) -- (ful);
+```
+
+填充颜色：
+
+```latex
+% front plane
+\filldraw[#6] ($(fll)+(\b,\b,0)$) -- ($(flr)+(-\b,\b,0)$) -- ($(fur)+(-\b,-\b,0)$) -- ($(ful)+(\b,-\b,0)$) -- ($(fll)+(\b,\b,0)$);
+\filldraw[#6] ($(ful)+(\b,0,-\b)$) -- ($(fur)+(-\b,0,-\b)$) -- ($(bur)+(-\b,0,\b)$) -- ($(bul)+(\b,0,\b)$);
+
+% Colored slice.
+\ifthenelse {\equal{#6} {}}
+{} % Do not draw colored slice if #6 is blank.
+% Else, draw a colored slice.
+{\filldraw[#6] ($(flr)+(0,\b,-\b)$) -- ($(blr)+(0,\b,\b)$) -- ($(bur)+(0,-\b,\b)$) -- ($(fur)+(0,-\b,-\b)$);}
+```
+
+![一个卷积神经网络结构图](https://img-blog.csdnimg.cn/2020090719313187.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+上边的图是通过以下代码生成的：
+
+```latex
+\begin{tikzpicture}
+
+% INPUT
+\networkLayer{3.0}{0.03}{0.0}{0.0}{0.0}{color=gray!80}{}{start}{}
+
+% ENCODER
+\networkLayer{3.0}{0.1}{0.5}{0.0}{0.0}{color=white}{conv}{}{}    % S1
+\networkLayer{3.0}{0.1}{0.1}{0.0}{0.0}{color=white}{}{}{}        % S2
+\networkLayer{2.5}{0.2}{0.1}{0.0}{0.0}{color=white}{conv}{}{}    % S1
+\networkLayer{2.5}{0.2}{0.1}{0.0}{0.0}{color=white}{}{}{}        % S2
+\networkLayer{2.0}{0.4}{0.1}{0.0}{0.0}{color=white}{conv}{}{}    % S1
+\networkLayer{2.0}{0.4}{0.1}{0.0}{0.0}{color=white}{}{}{}        % S2
+\networkLayer{1.5}{0.8}{0.1}{0.0}{0.0}{color=white}{conv}{}{}    % S1
+\networkLayer{1.5}{0.8}{0.1}{0.0}{0.0}{color=white}{}{}{}        % S2
+\networkLayer{1.0}{1.5}{0.1}{0.0}{0.0}{color=white}{conv}{}{}    % S1
+\networkLayer{1.0}{1.5}{0.1}{0.0}{0.0}{color=white}{}{mid}{}        % S2
+
+\networkLayer{1.0}{0.5}{1.5}{0.0}{-1.5}{color=green!50}{}{bot}{{mid_front}}
+\networkLayer{1.0}{0.5}{-0.5}{0.0}{1.5}{color=green!50}{}{top}{{mid_front}}
+\networkLayer{1.0}{0.5}{1.5}{0.0}{0.0}{color=blue!50}{sum}{}{{bot_front,top_front}}
+
+% DECODER
+\networkLayer{1.0}{1.5}{0.1}{0.0}{0.0}{color=white}{deconv}{}{} % S1
+\networkLayer{1.0}{1.5}{0.1}{0.0}{0.0}{color=white}{}{}{}       % S2
+\networkLayer{1.5}{0.8}{0.1}{0.0}{0.0}{color=white}{deconv}{}{} % S1
+\networkLayer{1.5}{0.8}{0.1}{0.0}{0.0}{color=white}{}{}{}       % S2
+\networkLayer{2.0}{0.4}{0.1}{0.0}{0.0}{color=white}{}{}{}       % S1
+\networkLayer{2.0}{0.4}{0.1}{0.0}{0.0}{color=white}{}{}{}       % S2
+\networkLayer{2.5}{0.2}{0.1}{0.0}{0.0}{color=white}{}{}{}       % S1
+\networkLayer{2.5}{0.2}{0.1}{0.0}{0.0}{color=white}{}{}{}       % S2
+\networkLayer{3.0}{0.1}{0.1}{0.0}{0.0}{color=white}{}{}{}       % S1
+\networkLayer{3.0}{0.1}{0.1}{0.0}{0.0}{color=white}{}{}{}       % S2
+
+% OUTPUT
+\networkLayer{3.0}{0.05}{0.9}{0.0}{0.0}{color=red!40}{}{}{}     % Pixelwise segmentation with classes.
+
+\end{tikzpicture}
+```
+
+需要注意的是#8和#9命令，mid_front代表的是链接#8=mid的front部分，front也可以被top、back、bottom取代。
+
+![](https://img-blog.csdnimg.cn/20200907174034974.png#pic_center)
 
 ## 4. 资源推荐
 
