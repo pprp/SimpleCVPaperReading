@@ -210,5 +210,5 @@ Skip-connect
 ## 数学描述
 
 $$
-o^{(i,j)}=argmax_{o\in O} \alpha_{o}^{(1,j)}
+o^{(i,j)}=argmax_{o\in O} \alpha_{o}^{(i,j)}
 $$
