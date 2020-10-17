@@ -14,19 +14,21 @@ AutoML和NAS是深度学习领域的新秀。不需要过多的工作量，他�
 
 ## Neural Architecture Search
 
-神经网络架构搜索，简称NAS。开发一个神经网络模型往往需要大量的工程架构方面的设计。有时候可以通过迁移学习完成一个任务，但是如果想要有更好的性能，最好设计自己的网络。为自己的任务设计网络架构需要非常专业的技能，并且总体上非常有挑战性。我们很可能不知道当前最新技术的局限在哪里（SOTA技术的瓶颈我们并不清楚），所以会进行很多试错，这样的话非常浪费时间和金钱。
+神经网络架构搜索，简称NAS。开发一个神经网络模型往往需要大量的工程架构方面的设计。有时候可以通过迁移学习完成一个任务，但是如果想要有更好的性能，最好设计自己的网络。
+
+为自己的任务设计网络架构需要非常专业的技能，并且非常有挑战性。我们很可能不知道当前最新技术的局限在哪里（SOTA技术的瓶颈我们并不清楚），所以会进行很多试错，这样的话非常浪费时间和金钱。
 
 为了解决这个问题，NAS被提出来了，这是一种可以搜索最好的神经网络结构的算法。大多数算法都是按照以下方式进行的：
 
 1. 首先定义一个Building Blocks的集合，集合中元素代表的是可能用于神经网络搜索的基本单元。比如说NASNet中提出了以下Building Block。
 
-![image-20201010204933174](%E4%BD%A0%E6%89%80%E9%9C%80%E8%A6%81%E7%9F%A5%E9%81%93%E7%9A%84%E5%85%B3%E4%BA%8EAutoML%E5%92%8CNAS%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9.assets/image-20201010204933174.png)
+![Building Block](https://img-blog.csdnimg.cn/20201017183725548.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
 在NAS算法中，控制器RNN会从这些Building Blocks中采样，将他们拼接起来构建一个端到端的网络架构。这种结构通常与SOTA网络的架构相同，如ResNet、DenseNet，但是使用的模块组合和配置有较大的区别。
 
 对新产生的网络架构进行训练，使其收敛，并在验证集上进行测试得到准确率。产生的准确率可以用于更新控制器，以便于控制器能够生成更好的网络结构。控制器的权重使用的是策略梯度进行更新的。整个端到端的设置如下图所示：
 
-![image-20201011184845635](%E4%BD%A0%E6%89%80%E9%9C%80%E8%A6%81%E7%9F%A5%E9%81%93%E7%9A%84%E5%85%B3%E4%BA%8EAutoML%E5%92%8CNAS%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9.assets/image-20201011184845635.png)
+![NAS端到端流程](https://img-blog.csdnimg.cn/20201017183744706.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
 整个过程非常符合直觉。简单来说，让算法从不同的block之中采样，然后将这些模块组合起来构建新的网络。然后训练并测试该网络，根据获得的结果，调整使用的block模块以及各个block之间的连接方式。
 
@@ -34,13 +36,11 @@ AutoML和NAS是深度学习领域的新秀。不需要过多的工作量，他�
 
 第二点就是搜索空间非常局限。NAS被设计用来构建与SOTA相似的网络架构。对于图像分类任务来说，网络构建需要重复的模块，然后逐步进行下采样，如左图所示。 NAS设计的网络的主要新颖部分是这些块的连接方式。
 
-![image-20201011193906101](%E4%BD%A0%E6%89%80%E9%9C%80%E8%A6%81%E7%9F%A5%E9%81%93%E7%9A%84%E5%85%B3%E4%BA%8EAutoML%E5%92%8CNAS%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9.assets/image-20201011193906101.png)
+![连接方式](https://img-blog.csdnimg.cn/20201017183753760.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
 下图是在ImageNet中搜索得到的最好的block结构。可以发现这几个都包含了相当随机的混合操作，包括许多可分离卷积。
 
-
-
-![image-20201011193951164](%E4%BD%A0%E6%89%80%E9%9C%80%E8%A6%81%E7%9F%A5%E9%81%93%E7%9A%84%E5%85%B3%E4%BA%8EAutoML%E5%92%8CNAS%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9.assets/image-20201011193951164.png)
+![ImageNet上搜索结果](https://img-blog.csdnimg.cn/20201017183802640.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
 ## 架构搜索方面的进步
 
@@ -56,7 +56,7 @@ Efficient Nerual Architecture Search(ENAS)是另外一种试图提高通用网�
 
 下表显示了使用单个1080Ti GPU进行半天的培训后ENAS的效率要高得多。
 
-![image-20201011204900999](%E4%BD%A0%E6%89%80%E9%9C%80%E8%A6%81%E7%9F%A5%E9%81%93%E7%9A%84%E5%85%B3%E4%BA%8EAutoML%E5%92%8CNAS%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9.assets/image-20201011204900999.png)
+![NAS算法对比](https://img-blog.csdnimg.cn/20201017183813164.png#pic_center)
 
 ## 深度学习新范式：AutoML
 
@@ -64,7 +64,7 @@ Efficient Nerual Architecture Search(ENAS)是另外一种试图提高通用网�
 
 AutoML的想法是简单地抽象出深度学习的所有复杂部分。需要提供的只有数据。剩下的让AutoML设计最困难的部分。这样一来，深度学习就会像其他工具一样，成为插件工具。
 
-![image-20201011215505490](%E4%BD%A0%E6%89%80%E9%9C%80%E8%A6%81%E7%9F%A5%E9%81%93%E7%9A%84%E5%85%B3%E4%BA%8EAutoML%E5%92%8CNAS%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9.assets/image-20201011215505490.png)
+![AutoML工作流程](https://img-blog.csdnimg.cn/20201017183827442.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
 Cloud AutoML的价格确实高达2000美元，很遗憾，训练好以后也无法导出模型； 将不得不使用他们的API在云上运行你的网络。 还有其他一些完全免费的替代方法，但确实需要更多工作。
 
@@ -87,3 +87,7 @@ NAS和AutoML的这个新方向为人工智能社区提供了令人兴奋的挑�
 ## 英文原文
 
 链接：https://towardsdatascience.com/everything-you-need-to-know-about-automl-and-neural-architecture-search-8db1863682bf
+
+## 后记
+
+英文翻译过来有点拗口，感谢阅读。笔者最近将研究这个方向，欢迎相似方向的同学添加我的微信，多多沟通。
