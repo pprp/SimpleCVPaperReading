@@ -1,5 +1,7 @@
 # 分布式训练框架Horovod初步学习
 
+[TOC]
+
 ## 简介
 
 Horovod 是 TensorFlow、Keras、PyTorch 和 Apache MXNet 的分布式深度学习训练框架。Horovod 的目标是使分布式深度学习快速且易于使用。
@@ -562,7 +564,37 @@ if __name__ == '__main__':
         test()
 ```
 
+## 推理
 
+这部分源码贡献自蒋神，感谢！
+
+```python
+import horovod.torch as hvd
+
+setup_seed(42)
+hvd.init()
+
+if torch.cuda.is_available():
+    torch.cuda.set_device(hvd.local_rank())
+
+cudnn.benchmark = True
+    
+test_sampler = torch.utils.data.distributed.DistributedSampler(
+        test_dataset, num_replicas=hvd.size(), rank=hvd.rank(), shuffle=False
+    )
+
+testLoader = DataLoader(
+        test_dataset, batch_size=batch_size, sampler=test_sampler, **kwargs)
+    verbose = 1 if hvd.rank() == 0 else 0
+    
+    logits_result = predict_logits(model, testLoader)
+    for i in range(hvd.size()):
+        if hvd.rank() == i:
+            np.save("/data/remote/output_ckpt_with_logs/accv/logits/inceptionv3/incepv3_{}.npy".format(i),np.array(logits_result))
+
+```
+
+非全部代码，仅供参考。
 
 ## 训练命令
 
