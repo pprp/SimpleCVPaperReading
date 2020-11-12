@@ -235,9 +235,49 @@ I-DARTS解决方案是同时考虑所有的输入节点，看下面示意图：
 
 一个新的想法是将已有的人工设计的网络架构作为起始点，然后以此为基础使用NAS方法进行搜索，这样可以以更小的计算代价获得一个更有希望的模型架构。
 
+以上想法就可以看作是Network Transform或者Knowledge Transform（知识迁移）。
 
+**Net2Net**对知识迁移基础进行了详尽的研究，提出了一个“功能保留转换”（Function-perserving Transformation）的方法来实现对模型参数的重复利用，可以极大地加速训练新的、更大的网络结构。
 
+![Net2Net的思想](https://img-blog.csdnimg.cn/20201112190059886.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
+其中主要有Net2WiderNet和Net2DeeperNet，两个变换可以让模型变得更宽更深。
+
+![Net2Wider](https://img-blog.csdnimg.cn/20201112190249127.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+Wider就是随即从已有节点中选择一个节点复制其权重，如上图右侧的h3选择复制了h2的参数。对于输出节点来说，需要把我们选择的节点的值都除以2，这样就完成了全连接层的恒等替换。（卷积层类似）
+
+![Net2Deeper](https://img-blog.csdnimg.cn/20201112190838829.png#pic_center)
+
+Deeper就是加深网络，对全连接层来说，利用一个单位矩阵做权值，添加一个和上一个全连接层维度完全相同的全连接层，把前一个全连接层的权重复制过来，得到更深的网络。
+
+基于Net2Net，Efficient Architecture Search(EAS)进行了改进，使用强化学习的Agent作为元控制器(meta-controller),其作用是通过“功能保留转换”增加深度或者宽度。
+
+![EAS示意图](https://img-blog.csdnimg.cn/20201112192413504.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+Bi-LSTM就是mata-controller，用来学习底层表达的特征，输出结果被送到Net2Wider Actor 和 Net2Deeper Actor用于判断对模型进行加深或者加宽的操作。
+
+![Net2Wider Actor](https://img-blog.csdnimg.cn/20201112192605826.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+Net2Wider Actor使用共享的Sigmoid分类器基于Encoder输出结果来决定是否去加宽每个层。
+
+![Net2Deeper Actor](https://img-blog.csdnimg.cn/20201112192713260.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+Net2Deeper Actor使用循环神经网络来顺序的决定是否添加一个新的层和对应的网络参数。
+
+**N2N Learning**中没有使用加宽或者加深的操作，而是考虑通过移除层或者缩小层来压缩**教师网络**。利用强化学习对网络进行裁剪，从Layer Removal和Layer Shrinkage两个维度进行裁剪，第一个代表是否进行裁剪，第二个是对一层中的参数进行裁剪。
+
+![N2N learning](https://img-blog.csdnimg.cn/20201112223440890.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+- 首先使用layer removal操作
+- 然后使用layer shrinkage操作
+- 然受使用强化学习来探索搜索空间
+- 然后使用只是蒸馏的方法训练每个生成得到的网络架构。
+- 最终得到一个局部最优的学生网络。
+
+该方法可以达到10倍数的压缩率。
+
+**Path-level EAS**实现了
 
 
 
@@ -257,5 +297,12 @@ https://www.cc.gatech.edu/classes/AY2021/cs7643_fall/slides/L22_nas.pdf
 
 https://www.media.mit.edu/projects/architecture-selection-for-deep-neural-networks/overview/
 
+https://blog.csdn.net/cFarmerReally/article/details/80927981
 
+https://cloud.tencent.com/developer/article/1470080
 
+Net2Net: http://xxx.itp.ac.cn/pdf/1511.05641
+
+EAS：https://arxiv.org/abs/1707.04873
+
+E2E learning: https://blog.csdn.net/weixin_30602505/article/details/98228471
