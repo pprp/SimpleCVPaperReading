@@ -277,7 +277,108 @@ Net2Deeper Actor使用循环神经网络来顺序的决定是否添加一个新�
 
 该方法可以达到10倍数的压缩率。
 
-**Path-level EAS**实现了
+**Path-level EAS**实现了Path level（一个模块之内的路径path）的网络转换。这种想法主要是来源于很多人工设计的多分支网络架构的成功，比如ResNet、Inception系列网络都使用到了多分支架构。Path-level EAS通过用使用多分枝操作替换单个层来完成路径级别的转换，其中主要有分配策略和合并策略。
+
+分配策略包括Replication和Split:
+
+![PATH-level EAS的分配策略](https://img-blog.csdnimg.cn/20201113154400257.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+- Replication就是将输入x复制两份，分别操作以后将得到的结果除以2再相加得到输出。
+- Split就是将x按照维度切成两份，分别操作以后，将得到的结果concate到一起。
+
+合并策略包括：add和concatenation
+
+![Path-level EAS示意图](https://img-blog.csdnimg.cn/20201113154632387.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center) 
+
+上图描述的是Path-level EAS的示意图：
+
+（a）使用了Replication策略
+
+（b）使用了Split策略
+
+（c）将一个恒等映射替换为可分离3x3卷积
+
+（d）表达了(c)中的网络结构的树状结构。
+
+另一个类似的工作，**NASH-Net**基于Net2Net更进一步提出了四种网络变形的方法。NASH-Net可以同一个预训练的模型，使用四种网络形变方法来生成一系列子网络，对这些子网络进行一段时间的训练以后，找到最好的子网络。然后从这个子网络开始，使用基于爬山的神经网络架构搜索方法（Neural Architecture Search by Hill-Climbing）来得到最好的网络架构。
+
+之前的网络通常研究的是图像分类的骨干网络，针对分割或者检测问题的网络一般无法直接使用分类的骨干，需要针对任务类型进行专门设计。尽管已经有一些方法用于探索分割和检测的骨干网络了，比如Auto-Deeplab、DetNas等，但是这些方法依然需要预训练，并且计算代价很高。
+
+**FNA**(Fast Neural Network Adaptation)提出了一个可以以近乎0代价，将网络的架构和参数迁移到一个新的任务中。FNA首先需要挑选一个人工设计的网络作为种子网络，在其操作集合中将这个种子网络扩展成一个超网络，然后使用NAS方法（如DARTS,ENAS,AmoebaNet-A）来调整网络架构得到目标网络架构。然后使用种子网络将参数映射到超网络和目标网络进行参数的初始化。最终目标网络是在目标任务上进行微调后的结果。整个流程如下图所示：
+
+![FNA流程](https://img-blog.csdnimg.cn/20201113161913558.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+> ps: 分类backbone和其他任务是有一定gap的,FNA认为通过微调神经网络带来的收益不如调整网络结构带来的收益）
+
+### 4.4 不完全训练
+
+NAS的核心一句话来概括就是使用搜索策略来比较一系列候选网络结构的模型表现找到其中最好的网络架构。所以如何评判候选网络也是一个非常重要的问题。
+
+早期的NAS方法就是将候选网络进行完全的训练，然后在验证集上测试候选网络架构的表现。由于候选网络的数目非常庞大，这种方法耗时太长。随后有一些方法被提了出来：
+
+- NAS-RL采用了并行和异步的方法来加速候选网络的训练
+- MetaQNN在第一个epoch训练王以后就使用预测器来决定是否需要减少learning rate并重新训练。
+- Large-scale Evolution方法让突变的子网络尽可能继承父代网络，对于突变的结构变化较大的子网络来说，就很难继承父代的参数，就需要强制重新训练。
+
+#### 4.4.1 权重共享
+
+上面的方法中，上一代已经训练好的网络的参数直接被废弃掉了，没有随后的网络充分利用，**ENAS**首次提出了参数共享的方法，ENAS认为NAS中的候选网络可以被认为是一个从**超网络结构**中抽取得到的**有向无环子图**
+
+![ENAS Parameter Sharing](https://img-blog.csdnimg.cn/20201113181327482.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+超网络结构就如上图绿色框部分所示，是节点和此节点之前所有节点进行连接，然后形成的网络。两个红色框就是从超网络结构中采样得到的一个单向无环图，这两个子网络共享的权重也就很容易找到$w_{21},w_{42},w_{63}$。这样ENAS就可以强制所有子网络都共享相同的参数。
+
+然后ENAS使用LSTM作为一个控制器在超网络结构中找到最优子网络结构。通过这种方法，可以避免让每个子网络从头开始训练，可以更好地提高网络的搜索效率。
+
+**CAS**(Continual and Multi-Task Architecture Search)基于ENAS探索了多任务网络架构搜索问题，可以扩展NAS在不同的数据集见进行迁移学习的能力。CAS引入了一个新的**连续架构搜索**方法来解决**连续学习过程**中的遗忘问题，从而可以继承上个任务中的经验，这对于多任务学习来说非常有帮助（感觉可以一定程度上避免过拟合）。
+
+**AutoGAN**首先将GAN的思想引入NAS,并且使用了Inception Score作为强化学习的奖励值，使用ENAS中的参数共享和动态重设来加速搜索过程。训练过程中引入了Progressive GAN的技巧，逐渐的实现NAS。
+
+**OFA**（Once for all）使用了一个弹性Kernel机制来满足多平台部署的应用需求和不同平台的视觉需求的多样性。小的kernel会和大的kernel共享权重。在网络层面，OFA优先训练大的网络，然后小的网络会共享大网络的权重，这样可以加速训练的效率。
+
+此外，基于one-shot的方法也使用到了权重共享的思想。**SMASH**提出训练一个辅助的HyperNet，然后用它来为其他候选网络架构来生成权重。此外，SMASH对利用上了训练早期的模型表现，为排序候选网络结构提供了有意义的指导建议。
+
+One-Shot Models这篇文章讨论了SMASH中的HyperNetwork和ENAS中的RL Controller的必要性，并认为不需要以上两者就可以得到一个很好的结果。
+
+**Graph HyperNetwork**(GHN)推荐使用计算图来表征网络结构，然后使用**GNN**来完成网络架构搜索。GHN可以通过图模型来预测所有的自由权重，因此GHN要比SMASH效果更好，预测精度更加准确。
+
+典型的one-shot NAS需要从HyperNet中通过权重共享的方式采样得到一系列候选网络，然后进行评估找到最好的网络架构。**STEN**提出从这些采样得到的候选网络中很难找到最好的架构，这是因为共享的权重与可学习的网络架构的参数紧密耦合。这些偏差会导致可学习的网络架构的参数偏向于简单的网络，并且导致候选网络的良好率很低。因为简单的网络收敛速度要比复杂网络要快，所以会导致HyperNet中的参数是偏向于完成简单的网络架构。
+
+STEN提出了使用一个均匀的随机训练策略来平等的对待每一个候选网络，这样他们可以被充分训练来得到更加准确的验证集表现。此外，STEN还使用了评价器来**学习候选网络具有较低验证损失的概率**，这样极大地提升了候选网络的优秀率。
+
+《Evaluating the search phase of neural architecture search》也认为ENAS中的权重共享策略会导致NAS很难搜索得到最优的网络架构。此外，FairNAS的研究和《 Improving One-shot NAS by Suppressing the Posterior Fading》中显示基于参数共享方法的网络结构很难被充分训练，会导致候选网络架构不准确的排序。
+
+在DARTS、FBNet、ProxyLessNas这种同时优化超网络权重和网络参数的方法，会在子模型之间引入偏差。为了这个目的，**DNA**( Blockwisely Supervised Neural Architecture Search with Knowledge Distillation)提出将神经网络结构划分为互不影响的block，利用蒸馏的思想，引入教师模型来引导网络搜索的方向。通过网络搜索空间独立分块的权重共享训练，降低了共享权重带来的表征偏移的问题。
+
+**GDAS-NSAS**也是希望提升one-shot Nas的权重共享机制，提出了一个NSAS的损失函数来解决多模型遗忘（当使用权重共享机制训练的时候，在训练一个新的网络架构的时候，上一个网络架构的表现会变差）的问题。
+
+可微分的NAS使用了类似的权重共享策略，比如DARTS选择训练一个超网络，然后选择最好的子网络。ENAS这类方法则是训练从超网络中采样得到的子网络
+
+#### 4.4.2 训练至收敛
+
+在NAS中，是否有必要将每个候选网络都训练至收敛呢？答案是否定的。
+
+为了更快的分析当前模型的有效性，研究院可以根据学习曲线来判断当前模型是否有继续训练下去的价值。如果被判定为没有继续训练的价值，就应该及早终止，尽可能节约计算资源和减少训练时间。
+
+那么NAS也应该采取相似的策略，对于没有潜力的模型，应及早停止训练；对于有希望的网络结构则应该让其进行充分的训练。
+
+《 Speeding up automatic hyperparameter optimization of deep neural networks by extrapolation of learning curves》一文中就提出了使用概率性方法来模拟网络的学习曲线。但是这种方法需要长时间的前期学习才能准确的模拟和预测学习曲线。
+
+《Learning curve prediction with Bayesian neural networks》改进了上述方法，学习曲线的概率模型可以跨超参数设置，采用成熟的学习曲线提高**贝叶斯神经网络**的性能。
+
+以上方法是基于部分观测到的早期性能进行预测学习曲线，然后设计对应的机器学习模型来完成这个任务。为了更好的模拟人类专家，《Accelerating neural architecture search using performance prediction.》首先将NAS和学习曲线预测结合到了一起，建立了一个标准的频率回归模型，获从网络结构、超参数和早期学习曲线得到对应的最简单的特征。利用这些特征对频率回归模型进行训练，然后结合早期训练经验**预测**网络架构最终验证集的性能。
+
+**PNAS**中也用到了性能预测。为了避免训练和验证所有的子网络，PNAS提出了一个预测器函数，基于前期表现进行学习，然后使用预测器来评估所有的候选模型，选择其中topk个模型，然后重复以上过程直到获取到了足够数量的模型。
+
+![基于前期结果进行预测的示意图](https://img-blog.csdnimg.cn/20201113233613487.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+上图就是一个示意图，在早停点停止以后，预测器可以预测网络随后的状态，得到预测的学习曲线。
+
+**NAO**
+
+
+
+
 
 
 
@@ -306,3 +407,11 @@ Net2Net: http://xxx.itp.ac.cn/pdf/1511.05641
 EAS：https://arxiv.org/abs/1707.04873
 
 E2E learning: https://blog.csdn.net/weixin_30602505/article/details/98228471
+
+Path-level EAS: https://blog.csdn.net/cFarmerReally/article/details/80887271
+
+FNA：https://zhuanlan.zhihu.com/p/219774377
+
+AmoebaNet: https://blog.csdn.net/vectorquantity/article/details/108625172
+
+ENAS:https://zhuanlan.zhihu.com/p/35339663
