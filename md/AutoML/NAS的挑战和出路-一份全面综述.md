@@ -374,17 +374,48 @@ STEN提出了使用一个均匀的随机训练策略来平等的对待每一个�
 
 上图就是一个示意图，在早停点停止以后，预测器可以预测网络随后的状态，得到预测的学习曲线。
 
-**NAO**
+**NAO**将网络架构的**连续表示**作为编码器输入，将**性能预测器**作为梯度上升的优化目标。通过最大化性能预测器f的输出，就可以获得最佳网络结构的连续表示。最终使用**解码器**来得到最终的离散的网络架构。
 
+MdeNAS提出了一个**性能排序假说**：训练前期就表现出色的模型，往往在收敛以后会得到一个很好的结果。MdeNAS做了很多实验来验证这个假说，通过候选网络框架的初期表现就可以得到相对的性能排序，可以加速搜索过程。
 
+## 5. 性能对比
 
+这一节主要是对主流的NAS方法进行比较，同时报告各自采用的优化策略。这些策略包括:
 
+- reinforcement learning(RL)
+- evolutionary algorithm(EA)
+- gradient optimization(GO)
+- random search(RS)
+- sequential model-based optimization(SMBO)
 
+实际上NAS之间的性能对比非常困难，原因如下：
 
+- 缺少baseline（通常随机搜索策略会被认为是一个强有力的baseline）
+- 预处理、超参数、搜索空间、trick等不尽相同
 
+**CIFAR10上结果对比：**
 
+![人工设计和强化学习方法](https://img-blog.csdnimg.cn/20201114122857394.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
+Human中是从人工设计的网络中挑选了几个代表作为错误率和参数量的对照。
 
+RL代表使用强化学习方法进行网络结构搜索， 方法中包括了上文提到的NAS-RL、EAS、NASNet等方法，综合来看还是FPNAS效果最好。
+
+![进化算法](https://img-blog.csdnimg.cn/20201114123127793.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+可以看到进化算法普遍用的GPU时间比较高，不过NASH-Net和Evolution用时很少的情况下也能达到不错的表现。
+
+![基于梯度优化的NAS](https://img-blog.csdnimg.cn/20201114123142301.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+这部分算法主要是以DARTS、ENAS为代表的，所用的GPU days普遍比较低，效果很好。
+
+![随即搜索和基于顺序模型的优化策略](https://img-blog.csdnimg.cn/20201114123153311.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+上图展示的是分别是随即搜索的方法和基于顺序模型的优化策略的效果。
+
+**ImageNet上的结果对比：**
+
+![ImageNet上各类算法对比](https://img-blog.csdnimg.cn/20201114132717357.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
 ## 评价
 
