@@ -1,6 +1,15 @@
 # NAS的挑战和解决方案-一份全面的综述
 
-【GiantPandaCV导读】笔者在这篇文章中对《A Comprehensive Survey of Nerual Architecture Search: Challenges and Solutions》这篇进行翻译和解读，这是2020年刚刚发到arxiv上的有关NAS的综述，内容比较多，30页152篇参考文献。
+【GiantPandaCV导读】上一篇中，笔者翻译了国外一篇介绍Automl和NAS的博客，[点这里回顾](https://mp.weixin.qq.com/s?__biz=MzA4MjY4NTk0NQ==&mid=2247490497&idx=1&sn=cdd097b1f9eaccef1d99d6976ad68e63&chksm=9f80a157a8f72841f8e09c2eb8e500a45271d02dfdda605679375942ad52f7757c21ba9f8012&scene=21#wechat_redirect)。这一篇是笔者对《A Comprehensive Survey of Nerual Architecture Search: Challenges and Solutions》这篇论文进行翻译和解读，这是2020年刚刚发到arxiv上的有关NAS的综述，内容比较多，30页152篇参考文献。对初学者来说，可以当作一个学习的目录，阅读文中提到的论文。文末用思维导图总结了整篇文章脉络，可以用来速览。
+
+【内容速览】你可能感兴趣的内容：
+
+- NAS是什么？由什么组成？常用算法是什么？
+- Add操作要比concate操作更加有效。
+- **宽而浅的单元**（采用channel个数多，但层数不多）在训练过程中更容易**收敛**，但是缺点是**泛化性能很差。**
+- 能根据网络前几个epoch的表现就确定这个网络是否能够取得更高性能的**预测器**（性能预测）。
+- 根据候选网络结构的表示就可以预测这个模型未来的表现（性能预测）。
+- 分类的backbone和其他任务比如检测是存在一定gap的，最好的方式并不一定是微调，而可能是改变网络架构。
 
 [TOC]
 
@@ -97,13 +106,13 @@ GeNet也采用了**进化算法**，提出了一个新的神经网络架构编�
 
 ### 3.2 从头搜索
 
-早期NAS中，从头开始搜索也是一个较为常见的搜索策略。NAS-RL将网络架构表达为一个可变长的字符串，采用RNN作为控制器来生趁这个可变长字符串，根据该串可以得到一个相对应的神经网络的架构，采用强化学习作为搜索的策略对网络搜索方式进行调整。
+早期NAS中，从头开始搜索也是一个较为常见的搜索策略。NAS-RL将网络架构表达为一个可变长的字符串，采用RNN作为控制器来生成这个可变长字符串，根据该串可以得到一个相对应的神经网络的架构，采用强化学习作为搜索的策略对网络搜索方式进行调整。
 
 ![](https://img-blog.csdnimg.cn/20201110093132587.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
 MetaQNN考虑训练一个Agent/Actor来让其在搜索空间中按照顺序选择神经网络的架构。MetaQNN将这个选择过程看作马尔可夫决策过程，使用Q-learning作为搜索策略进而调整Agent/Actor所决定执行的动作。
 
-> https://bowenbaker.github.io/metaqnn/
+> 图源：https://bowenbaker.github.io/metaqnn/
 
 ![](https://img-blog.csdnimg.cn/20201110093724416.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
@@ -166,7 +175,7 @@ Large-scale Evolution只用了一个单层的、无卷积操作的模型作为�
 
 规定一组符号来表达DARTS网络：
 
-- 中间节点$x^{(j)}$代表潜在的特征表达，并且和每个前的节点$x^{(i)}$都通过一个有向边操作$o^{(i,j)}$。对一个离散的空间来说，每个中继节点可以这样表达：
+- 中间节点$x^{(j)}$代表潜在的特征表达，并且和每个之前的节点$x^{(i)}$都通过一个有向边操作$o^{(i,j)}$。对一个离散的空间来说，每个中继节点可以这样表达：
 
 $$
 x^{(j)}=\sum_{i\lt j}o(i,j)(x^{(i)})
@@ -243,7 +252,7 @@ I-DARTS解决方案是同时考虑所有的输入节点，看下面示意图：
 
 ![Net2Wider](https://img-blog.csdnimg.cn/20201112190249127.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
-Wider就是随即从已有节点中选择一个节点复制其权重，如上图右侧的h3选择复制了h2的参数。对于输出节点来说，需要把我们选择的节点的值都除以2，这样就完成了全连接层的恒等替换。（卷积层类似）
+Wider就是随机从已有节点中选择一个节点复制其权重，如上图右侧的h3选择复制了h2的参数。对于输出节点来说，需要把我们选择的节点的值都除以2，这样就完成了全连接层的恒等替换。（卷积层类似）
 
 ![Net2Deeper](https://img-blog.csdnimg.cn/20201112190838829.png#pic_center)
 
@@ -268,9 +277,9 @@ Net2Deeper Actor使用循环神经网络来顺序的决定是否添加一个新�
 ![N2N learning](https://img-blog.csdnimg.cn/20201112223440890.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
 - 首先使用layer removal操作
-- 然后使用layer shrinkage操作
-- 然受使用强化学习来探索搜索空间
-- 然后使用只是蒸馏的方法训练每个生成得到的网络架构。
+- 使用layer shrinkage操作
+- 使用强化学习来探索搜索空间
+- 然后使用知识蒸馏的方法训练每个生成得到的网络架构。
 - 最终得到一个局部最优的学生网络。
 
 该方法可以达到10倍数的压缩率。
@@ -328,7 +337,7 @@ NAS的核心一句话来概括就是使用搜索策略来比较一系列候选�
 
 然后ENAS使用LSTM作为一个控制器在超网络结构中找到最优子网络结构。通过这种方法，可以避免让每个子网络从头开始训练，可以更好地提高网络的搜索效率。
 
-**CAS**(Continual and Multi-Task Architecture Search)基于ENAS探索了多任务网络架构搜索问题，可以扩展NAS在不同的数据集见进行迁移学习的能力。CAS引入了一个新的**连续架构搜索**方法来解决**连续学习过程**中的遗忘问题，从而可以继承上个任务中的经验，这对于多任务学习来说非常有帮助（感觉可以一定程度上避免过拟合）。
+**CAS**(Continual and Multi-Task Architecture Search)基于ENAS探索了多任务网络架构搜索问题，可以扩展NAS在不同的数据集进行迁移学习的能力。CAS引入了一个新的**连续架构搜索**方法来解决**连续学习过程**中的遗忘问题，从而可以继承上个任务中的经验，这对于多任务学习来说非常有帮助（感觉可以一定程度上避免过拟合）。
 
 **AutoGAN**首先将GAN的思想引入NAS,并且使用了Inception Score作为强化学习的奖励值，使用ENAS中的参数共享和动态重设来加速搜索过程。训练过程中引入了Progressive GAN的技巧，逐渐的实现NAS。
 
@@ -364,7 +373,7 @@ STEN提出了使用一个均匀的随机训练策略来平等的对待每一个�
 
 《Learning curve prediction with Bayesian neural networks》改进了上述方法，学习曲线的概率模型可以跨超参数设置，采用成熟的学习曲线提高**贝叶斯神经网络**的性能。
 
-以上方法是基于部分观测到的早期性能进行预测学习曲线，然后设计对应的机器学习模型来完成这个任务。为了更好的模拟人类专家，《Accelerating neural architecture search using performance prediction》首先将NAS和学习曲线预测结合到了一起，建立了一个标准的频率回归模型，获从网络结构、超参数和早期学习曲线得到对应的最简单的特征。利用这些特征对频率回归模型进行训练，然后结合早期训练经验**预测**网络架构最终验证集的性能。
+以上方法是基于部分观测到的早期性能进行预测学习曲线，然后设计对应的机器学习模型来完成这个任务。为了更好的模拟人类专家，《Accelerating neural architecture search using performance prediction》首先将NAS和学习曲线预测结合到了一起，建立了一个标准的频率回归模型，从网络结构、超参数和早期学习曲线得到对应的最简单的特征。利用这些特征对频率回归模型进行训练，然后结合早期训练经验**预测**网络架构最终验证集的性能。
 
 **PNAS**中也用到了性能预测。为了避免训练和验证所有的子网络，PNAS提出了一个预测器函数，基于前期表现进行学习，然后使用预测器来评估所有的候选模型，选择其中topk个模型，然后重复以上过程直到获取到了足够数量的模型。
 
@@ -395,7 +404,7 @@ STEN提出了使用一个均匀的随机训练策略来平等的对待每一个�
 
 ![人工设计和强化学习方法](https://img-blog.csdnimg.cn/20201114122857394.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
-Human中是从人工设计的网络中挑选了几个代表作为错误率和参数量的对照。
+Human是从人工设计的网络中挑选了几个代表作为错误率和参数量的对照。
 
 RL代表使用强化学习方法进行网络结构搜索， 方法中包括了上文提到的NAS-RL、EAS、NASNet等方法，综合来看还是FPNAS效果最好。
 
@@ -407,9 +416,9 @@ RL代表使用强化学习方法进行网络结构搜索， 方法中包括了�
 
 这部分算法主要是以DARTS、ENAS为代表的，所用的GPU days普遍比较低，效果很好。
 
-![随即搜索和基于顺序模型的优化策略](https://img-blog.csdnimg.cn/20201114123153311.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+![随机搜索和基于顺序模型的优化策略](https://img-blog.csdnimg.cn/20201114123153311.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
 
-上图展示的是分别是随即搜索的方法和基于顺序模型的优化策略的效果。
+上图展示的是分别是随机搜索的方法和基于顺序模型的优化策略的效果。
 
 **ImageNet上的结果对比：**
 
@@ -434,7 +443,7 @@ RL代表使用强化学习方法进行网络结构搜索， 方法中包括了�
 
 RobNet提出了使用NAS方法得到很多候选网络，并分析这些结构中表现好的和表现差的模型之间的结构差异。一个可行的方案就是分析有希望的模型架构，并提高这种架构在搜索空间中的比例，降低性能差模型的比例，这样就可以逐步缩小搜索空间。
 
-NAS另外一个广受批判的问题就是缺乏baseline和可共享的实验性协议，因此NAS算法之间的对比就非常困难。虽然随即搜索算法被认为是一个强有力的baseline，但是相关工作仍然不够充分。《 Evaluating the search phase of neural architecture search》一文就支持了当前最优的NAS算法甚至是能达到和随机搜索相近的性能，这应该引起相关研究人员的警觉。因此，需要更多的消融实验来证明其有效性，并且研究人员应该更加注意分析NAS设计中到底哪部分起到了关键性作用。单纯的堆trick而达到较高的性能是应该被批判的。
+NAS另外一个广受批判的问题就是缺乏baseline和可共享的实验性协议，因此NAS算法之间的对比就非常困难。虽然随即搜索算法被认为是一个强有力的baseline，但是相关工作仍然不够充分。《Evaluating the search phase of neural architecture search》一文就支持了当前最优的NAS算法甚至是能达到和随机搜索相近的性能，这应该引起相关研究人员的警觉。因此，需要更多的消融实验来证明其有效性，并且研究人员应该更加注意分析NAS设计中到底哪部分起到了关键性作用。单纯的堆trick而达到较高的性能是应该被批判的。
 
 还有一个需要注意的问题就是权重共享，尽管这个策略可以提高NAS搜索算法的效率，但是越来越多的证据和研究表明权重共享策略会导致次优的候选网络架构排名。这会导致NAS几乎不可能在搜索空间中找到最优的模型。
 
@@ -444,7 +453,7 @@ NAS目前主流研究方向都集中于图像分类和降低搜索代价，其�
 
 ## 7. 结语
 
-这篇文章读了大概有一周，文章涉及到的内容非常多，NAS的分支比较复杂，每个分支都有很多出色的工作和理论。由于笔者自身水平有限，正在学习这方面的内容，有些地方翻译的内容难免注入自己的理解，可能并不到位，欢迎批评指正。
+这篇文章读了大概有一周，文章涉及到的内容非常多，NAS的分支比较复杂，每个分支都有很多出色的工作和理论。由于笔者自身水平有限，正在学习这方面的内容，有些地方翻译的内容难免理解上存在偏差，可能并不到位，欢迎批评指正。
 
 通读完以后，感觉在脑子中并没有形成非常鲜明的框架，并且文章中涉及到的论文用一两段话是很难讲明白的，所以这篇文章相当于一个NAS的指导手册，在入门之前可以阅读一下，留下各个算法的印象，然后根据文章提供的论文列表进行阅读。待读完一定数量的论文以后，再回过头来通读，相信应该能串联起来。为了让文章更清晰，根据文章内容整理了一个思维导图：
 
