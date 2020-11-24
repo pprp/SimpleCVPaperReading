@@ -205,3 +205,62 @@ print(y)
  [ 5  6  7  8  9]]
 ```
 
+## 9. 作业
+
+- 创建一个形为5×3的二维数组，以包含5到10之间的随机数。
+
+```python
+import numpy as np
+print(np.random.randint(5,11,size=(5,3)))
+```
+
+输出结果：
+
+```
+[[6 9 7] 
+ [9 8 6] 
+ [6 5 5] 
+ [9 9 8] 
+ [9 5 6]]
+```
+
+注意5-10之间，应设置范围[5,11)
+
+
+
+- 生成如下数据：
+
+![20201124223201378.png (436×137) (csdnimg.cn)](https://img-blog.csdnimg.cn/20201124223201378.png#pic_center)
+
+创建分别具有5000个数据的训练集（xi，y）和测试集（xi，y），其中xi在间隔（-10,10）上均匀随机分布。为了使回归问题“真实”，大的均匀噪声分布在[-0.2,0.2]已添加到所有训练样本中，同时测试数据保持无噪声。
+
+代码实现：
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+x = np.random.uniform(-10, 10, 5000)
+noise = np.random.uniform(-0.2, 0.2, 5000)
+
+x = np.sort(x)
+y_1 = np.sin(x)/x
+
+
+plt.plot(x, y_1, c='r')
+plt.scatter(x, y_1+noise, marker='.', c='b', linewidths=0.002)
+plt.show()
+```
+
+结果如下：
+
+![20201124224724929.png (829×622) (csdnimg.cn)](https://img-blog.csdnimg.cn/20201124224724929.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70#pic_center)
+
+
+
+
+
+
+
+
+

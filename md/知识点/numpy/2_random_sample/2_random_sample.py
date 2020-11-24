@@ -42,8 +42,8 @@
 # plt.show()
 
 # SAMPLE 4
-# import numpy as np 
-# import matplotlib.pyplot as plt 
+# import numpy as np
+# import matplotlib.pyplot as plt
 # x = np.random.uniform(0,10,50000)
 # plt.hist(x,bins=10)
 # plt.show()
@@ -55,7 +55,7 @@
 
 # SAMPLE 6
 # import numpy as np
-# import matplotlib.pyplot as plt 
+# import matplotlib.pyplot as plt
 # np.random.seed(0)
 # lam=7
 # x=np.random.exponential(1/lam, size=5000)
@@ -72,19 +72,38 @@
 # print(x)
 
 # SAMPLE 8
+# import numpy as np
+# x = np.arange(10)
+# print(x)
+# np.random.shuffle(x)
+# print(x)
+
+# x = np.random.randn(3,2,2)
+# print(x)
+# np.random.shuffle(x)
+# print(x)
+
+# x = np.arange(15).reshape(3,5)
+# print(x)
+# y = np.random.permutation(x)
+# print(x)
+# print(y)
+
+# WORK 1
+# import numpy as np
+# print(np.random.randint(5,11,size=(5,3)))
+
+# WORK 2
 import numpy as np
-x = np.arange(10)
-print(x)
-np.random.shuffle(x)
-print(x)
+import matplotlib.pyplot as plt
 
-x = np.random.randn(3,2,2)
-print(x)
-np.random.shuffle(x)
-print(x)
+x = np.random.uniform(-10, 10, 5000)
+noise = np.random.uniform(-0.2, 0.2, 5000)
 
-x = np.arange(15).reshape(3,5)
-print(x)
-y = np.random.permutation(x)
-print(x)
-print(y)
+x = np.sort(x)
+y_1 = np.sin(x)/x
+
+
+plt.plot(x, y_1, c='r')
+plt.scatter(x, y_1+noise, marker='.', c='b', linewidths=0.002)
+plt.show()
