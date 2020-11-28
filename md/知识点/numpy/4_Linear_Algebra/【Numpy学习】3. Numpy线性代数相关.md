@@ -4,6 +4,10 @@ Numpy 定义了 `matrix` 类型，使用该 `matrix` 类型创建的是矩阵对
 
 [TOC]
 
+## 0. 思维导图总结
+
+![](https://img-blog.csdnimg.cn/20201128214901772.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
 ## 1. np中的广播机制
 
 参考:https://www.runoob.com/numpy/numpy-broadcast.html
