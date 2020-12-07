@@ -150,11 +150,15 @@ $$
 $$
  可以看出，如果按照公式来实现sigmoid对低性能的硬件来说非常不友好，因为涉及到大量的exp指数运算和除法运算，于是有研究人员针对此专门设计了近似的硬件友好的函数h-sigmoid和h-swish函数，这里的h指的就是hardware的意思： 
 $$
-\rm{Hsigmoid}(x) = max(0,min(1,\frac{x+1}{2})) \\\rm{Hswish} =  x \frac{ReLU6(x+3)}{6}
+\rm{Hsigmoid}(x) = max(0,min(1,\frac{x+1}{2})) 
 $$
+$$
+\rm{Hswish} =  x \frac{ReLU6(x+3)}{6}
+$$
+
  可视化的对比如下图所示，可以看出在保证精度的同时又能大大方便硬件的实现，当然要直接实现sigmoid也是可以的，毕竟sigmoid是有限输出，当输入小于-8或大于8的时候，输出基本上接近于-1和1，可以根据这个特点设计一个查找表，速度也超快，且我们实测对精度没啥影响。
 
-![img](https://pic1.zhimg.com/v2-7825a693ce13ea97743e83865cb013e4_b.png)
+![](https://img-blog.csdnimg.cn/20201203223635295.png)
 
 ### 经典轻量化模型
 
@@ -185,7 +189,7 @@ MobileNet系列一共有V1,V2和V3三篇论文，简要的讲：
 
 3. MobileNet V3感觉相对于前两篇没有那么大的结构创新了，主要思想是神经架构搜索(NAS)和硬件友好结构，总的来看V3的结构是在V2的基础上进行了一些修改，如增加了SE block这种已被提出的注意力机制，激活函数换成了H-swish，last stage减少了几层计算，针对语义分割提出了Lite R-ASPP的head(不在讨论之列)，整个论文看着像是堆tricks，重点不是很突出，有点年底冲业绩的嫌疑。
 
-   ![img](https://pic1.zhimg.com/v2-83640001fc63f3aed98fc8a2fa4b2378_b.png)
+   ![](https://img-blog.csdnimg.cn/20201203224045223.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
    根据我自己的比赛和项目经验来看，还是MobileNet V1和V2的结构比较实用，参数量和计算量小，可拓展性好，SE block这种模块对延时影响还是不小，而且我们发现其他各种花里胡哨的激活函数跟ReLU/ReLU6相比都差不多，对精度没有很大的影响，还不如直接部署ReLU/ReLU6来的方便。
 
