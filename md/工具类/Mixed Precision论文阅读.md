@@ -75,9 +75,44 @@
 
 **逐点操作**，如非线性和元素间矩阵乘法，内存占用有限，运算精度不影响这些操作的速度。
 
+## 4. 结果
 
+在分类任务（ILSVRC/ImageNet）、检测任务（VOC2007）、语音识别（English-Mandarin）、机器翻译（English-Frech）、语言模型（1 billion word）、DCGAN这几个任务进行了实验，这篇解读仅展示分类任务和检测任务的结果。
 
-## 参考
+实验的时候每个任务都会设置一个两个对比试验
+
+- Baseline (FP32): 单精度的激活、权重、梯度得到的模型，运算使用的也是FP32。
+- Mixed Precision(MP): FP16用来存储和数值运算；权重、激活、梯度都是用的是FP16，其中主备份权重是FP32的。在一些任务中使用了Loss-scaling的技术。运算过程中使用Tensor Cores将累加过程（卷积层、全连接层、矩阵相乘）转为FP32来计算。
+
+### 4.1 分类
+
+分类任务上选择了AlexNet、Vgg-D、GoogLeNet、Inceptionv2、Inceptionv3 和 预激活ResNet50几个模型进行测试，主要满足以下条件：
+
+- 使用相同的超参数比较top-1 准确率。
+- 训练方法采用的是开源库中默认的方法。
+- 数据增强方法使用的是最简单的，并没有采用开源库中复杂的方法。主要包括：
+  - 随机水平翻转
+  - 随机剪裁crop
+
+![top-1实验结果对比](https://img-blog.csdnimg.cn/20201208175644167.png)
+
+可以看到Mixed Precision方法能够和Baseline方法差不多准确率，有时候甚至会略高于Baseline。
+
+在训练以上网络的时候，不需要使用Loss Scale方法，因为这些方法前向传播和反向传播的值都在FP16范围内。
+
+### 4.2 检测
+
+这里选择了Faster RCNN和Multibox-SSD两种方法在VOC2007数据集上进行训练，两个方法都是用来VGG-16作为骨干网络。模型和训练脚本都来自于开源库。
+
+![VOC2007上实验结果](https://img-blog.csdnimg.cn/2020120818074239.png)
+
+可以看到，如果使用Mixed Precision方法，在训练Multibox SSD的时候可能会由于下溢出导致模型不收敛，但是当使用了Loss Scale技术以后，就可以正常收敛，达到与Baseline相同的结果。
+
+## 5. 总结
+
+Mixed Precision混合精度是处于一个非常简单的想法，使用低精度的表示可以节约显存、内存同时增加处理器的吞吐量。虽然有以上的种种好处，直接使用半精度会出现一定的问题，比如：下溢出、精度损失等。所以这篇论文核心就是解决使用半精度过程中出现的问题，提出了三个方法达到了非常理想的效果。如果你使用的是有Tensor Core的GPU，那就非常推荐使用混合精度来训练，只需要安装NVIDIA提供的Apex库，然后在你的PyTorch or TensorFlow代码中加几行代码就可以实现。
+
+## 6. 参考
 
 https://arxiv.org/pdf/1710.03740v3
 
