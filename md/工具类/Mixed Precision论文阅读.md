@@ -37,7 +37,7 @@
 
 下面详细讲解第二节提到的三种技术。
 
-### FP32的主备份
+### 3.1 FP32的主备份
 
 ![这部分示意图](https://img-blog.csdnimg.cn/20201207210716127.png)
 
@@ -53,7 +53,7 @@
 
 ![图源知乎@瓦砾](https://img-blog.csdnimg.cn/20201207212530618.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-### Loss Scale
+### 3.2 Loss Scale
 
 下图展示的是激活值的范围和FP16表示范围之间的差异，50%以上的值都集中在不可表示的范围中，而右侧FP16可表示范围却空荡荡的，那么一个简单的想法就是向右平移，将激活平移到FP16可表示范围内。比如说可以将激活乘以8，这样可以平移3位，这样表示最低范围就从$2^{-24}$到了$2^{-27}$, 因为激活值低于$2^{-27}$的部分对模型训练来说不重要，所以这样操作就可以达到FP32的精度。
 
@@ -61,7 +61,19 @@
 
 那实际上是如何实现平移呢？很简单，就是在loss基础上乘以一个很大的系数loss scale, 那么由于链式法则，可以确保梯度更新的时候也采用相同的尺度进行缩放，最后在更新梯度之前再除以loss scale， 对FP32的单精度备份进行更新，就完成了。
 
-![实际上操作非常简单](https://img-blog.csdnimg.cn/20201207214107365.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+![图源NVIDIA PPT](https://img-blog.csdnimg.cn/20201207214107365.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+还有一个问题，就是loss scale值的选取，最简单的方法就是选择一个固定值作为loss scale,可以训练一系列网络缩放因子的设置可以从8到32k。固定的放缩因子选取是需要一定经验的，如果梯度的数据可以获取，那就选取一个值可以让其梯度的值小于65504（FP16可以表示的最大值）。如果选取loss scale值过大，可能会上溢出，这种情况可以通过检查梯度来判断，如果发生溢出，跳过权重更新，进行下一次迭代。
+
+### 3.3 运算精度
+
+在神经网络中的运算可以划分为三类：向量点乘（dot-products）、reduction和逐点操作。这三种操作在遇到半精度的时候，会有不同的处理方法。
+
+为了保持模型精度，需要将**向量点乘**的部分乘积累加为FP32，然后再转换为FP16。如果直接用FP16会导致精度损失，不能达到和原来一样的精度。现在很多支持Tensor Cores的GPU中已经实现了这样的操作。
+
+**Reduction操作**（比如求很多向量元素的和）需要先转为FP32, 这样的操作大部分出现在batch norm或者softmax层中。这两个层都是从内存中读写FP16的向量，执行运算的时候要使用FP32格式。
+
+**逐点操作**，如非线性和元素间矩阵乘法，内存占用有限，运算精度不影响这些操作的速度。
 
 
 
