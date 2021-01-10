@@ -1,8 +1,8 @@
-# PyTorch训练加速DataLoader
+# PyTorch消除训练瓶颈 提速技巧
 
 【GiantPandaCV导读】训练大型的数据集的速度受很多因素影响，由于数据集比较大，每个优化带来的时间提升就不可小觑。硬件方面，CPU、内存大小、GPU、机械硬盘orSSD存储等都会有一定的影响。软件实现方面，PyTorch本身的DataLoader有时候会不够用，需要额外操作，比如使用混合精度、数据预读取、多线程读取数据、多卡并行优化等策略也会给整个模型优化带来非常巨大的作用。那什么时候需要采取这篇文章的策略呢？那就是明明GPU显存已经占满，但是显存的利用率很低。
 
-本文将搜集到的资源进行汇总，找到了网上许多的方案，由于目前笔者训练的GPU利用率已经很高，所以并没有实际实验，可以在参考文献中看一下其他作者做的实验。
+本文将搜集到的资源进行汇总，由于目前笔者训练的GPU利用率已经很高，所以并没有实际实验，可以在参考文献中看一下其他作者做的实验。同时感谢作者群各位大佬的指点。
 
 [TOC]
 
@@ -100,7 +100,9 @@ PyTorch中默认使用的是Pillow进行图像的解码，但是其效率要比O
 
 ![各个库图片解码方式对比（图源德澎）](https://img-blog.csdnimg.cn/20201227124617222.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
+对于jpeg读取也可以考虑使用jpeg4py库（pip install jpeg4py）,重写一个loader即可。
 
+存bmp图也可以降低解码耗时，其他方案还有recordIO,hdf5,pth,n5,lmdb等格式
 
 
 
@@ -484,6 +486,15 @@ if __name__ =='__main__':
 
 PyTorch中提供了分布式训练API, nn.DistributedDataParallel, 推理的时候也可以使用nn.DataParallel或者nn.DistributedDataParallel。
 
+推荐一个库，里面实现了多种分布式训练的demo: https://github.com/tczhangzhi/pytorch-distributed 其中包括：
+
+- nn.DataParallel
+- torch.distributed
+- torch.multiprocessing
+- apex再加速
+- horovod实现
+- slurm GPU集群分布式
+
 ## 7. 混合精度训练
 
 mixed precision yyds，之前分享过mixed precision论文阅读，实现起来非常简单。在PyTorch中，可以使用Apex库。如果用的是最新版本的PyTorch，其自身已经支持了混合精度训练，非常nice。
@@ -499,9 +510,9 @@ batch_images = batch_images.pin_memory()
 Batch_labels = Variable(batch_labels).cuda(non_blocking=True) 
 ```
 
-- PyTorch的DataLoader有一个参数pin_memory，相当于在显存中设置了一块区域用于交换信息，可以提升速度。
-
-- non_blocking参数设置为true
+- PyTorch的DataLoader有一个参数pin_memory，使用固定内存，并使用non_blocking=True来并行处理数据传输。
+- torch.backends.cudnn.benchmark=True
+- 及时释放掉不需要的显存、内存。
 
 - 如果数据集比较小，直接将数据复制到内存中，从内存中读取可以极大加快数据读取的速度。
 
