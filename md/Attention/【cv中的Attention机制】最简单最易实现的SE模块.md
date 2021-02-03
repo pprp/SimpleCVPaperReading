@@ -12,7 +12,7 @@ SENet是Squeeze-and-Excitation Networks的简称，拿到了ImageNet2017分类�
 
 ![](https://img-blog.csdnimg.cn/20200101094228695.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-通过上图可以理解他的实现过程，通过对卷积的到的feature map进行处理，得到一个和通道数一样的一维向量作为每个通道的评价分数，然后将改分数分别施加到对应的通道上，得到其结果，就在原有的基础上只添加了一个模块，下边我们用pytorch实现这个很简单的模块。
+通过上图可以理解实现过程，通过对卷积的到的feature map进行处理，得到一个和通道数一样的一维向量作为每个通道的评价分数，然后将改分数分别施加到对应的通道上，得到其结果，就在原有的基础上只添加了一个模块，下边我们用pytorch实现这个很简单的模块。
 
 ![](https://img-blog.csdnimg.cn/20200101095330310.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 

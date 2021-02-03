@@ -2,9 +2,9 @@
 
 ## 1. NAS-RL（ICLR2017）
 
-谷歌最早发表的有关NAS的文章，全称<Neural Architecture Search with Reinforcement Learning>
+谷歌最早发表的有关NAS的文章，全称Neural Architecture Search with Reinforcement Learning
 
-https://arxiv.org/pdf/1611.01578.pdf
+链接：https://arxiv.org/pdf/1611.01578.pdf
 
 ![NAS-RL经典范式](https://img-blog.csdnimg.cn/20210202154726980.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 

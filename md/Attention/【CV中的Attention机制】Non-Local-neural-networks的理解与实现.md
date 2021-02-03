@@ -1,6 +1,6 @@
 ## 1. Non-local
 
-Non-Local是王小龙在CVPR2018年提出的一个自注意力模型。Non-Local Neural Network和Non-Local Means非局部均值去燥滤波有点相似的感觉。普通的滤波都是3×3的卷积核，然后在整个图片上进行移动，处理的是3×3局部的信息。Non-Local Means操作则是结合了一个比较大的搜索范围，并进行加权。
+Non-Local是王小龙在CVPR2018年提出的一个自注意力模型。Non-Local Neural Network和Non-Local Means非局部均值去噪滤波有点相似的感觉。普通的滤波都是3×3的卷积核，然后在整个图片上进行移动，处理的是3×3局部的信息。Non-Local Means操作则是结合了一个比较大的搜索范围，并进行加权。
 
 在Non-Local NN这篇文章中的Local也与以上有一定关系，主要是针对感受野来说的，一般的卷积的感受野都是3×3或5×5的大小，而使用Non-Local可以让感受野很大，而不是局限于一个局部领域。
 
@@ -35,7 +35,7 @@ $$
 $$
 g(x_j)=W_gx_j
 $$
-$W_g​$是需要学习的权重矩阵，可以通过空间上的1×1卷积实现（实现起来比较简单）。
+$W_g$是需要学习的权重矩阵，可以通过空间上的1×1卷积实现（实现起来比较简单）。
 
 ---
 
@@ -64,15 +64,17 @@ $$
 
 $$
 f(x_i,x_j)=\theta(x_i)^T\phi(x_j) \\
-C(x)=|\{i|i is a valid index of x\}|
+C(x)=|\{i|\text{i is a valid index of x}\}|
 $$
 
 - **Concatenation:** 具体公式如下：
 
 $$
 f(x_i,x_j)=ReLU(w_f^T .[\theta(x_i),\phi(x_j)]) \\
-C(x)=|\{i|i is a valid index of x\}|
+C(x)=|\{i|\text{i is a valid index of x}\}|
 $$
+
+
 
 ---
 
@@ -81,7 +83,7 @@ $$
 ![](https://img-blog.csdnimg.cn/20200105163010813.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
 - x代表feature map, $x_i$代表的是当前关注位置的信息； $x_j$代表的是全局信息。
-- θ代表的是$\theta (x_i)=W_{\theta}x_i​$ ,实际操作是用一个1×1卷积进行学习的。
+- θ代表的是$\theta (x_i)=W_{\theta}x_i$ ,实际操作是用一个1×1卷积进行学习的。
 - φ代表的是$\phi (x_j)=W_{\phi}x_j$,实际操作是用一个1×1卷积进行学习的。
 
 - g函数意义同上。
