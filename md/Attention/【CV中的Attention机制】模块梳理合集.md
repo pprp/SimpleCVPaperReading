@@ -190,7 +190,9 @@ CCNet: Criss-Cross Attention for Semantic Segmentation也是再Non-local Network
 
 ![CCNet示意图](https://img-blog.csdnimg.cn/20210203185656945.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-（a）图展示的是Non local Block所处理的上下文信息。（b）图展示的是CC Attention Block处理得上下文信息。CCNet认为这种处理方式对GPU训练更加友好，计算效率更高，效果也达到了当时的SOTA。
+（a）图展示的是Non local Block所处理的上下文信息。（b）图展示的是CC Attention Block处理得上下文信息，只有周围的十字型区域像素与其有关，并认为通过两次堆叠可以覆盖全部的点，可以达到超过Non-Local Network的效果。
+
+CCNet认为这种处理方式对GPU训练更加友好，计算效率更高，效果也达到了当时的SOTA。
 
 CCNet应用于语义分割领域，将CC Attention Block加到CNN之后来获取丰富得语义信息，下图展示的是设置循环R=2的情况下的结果，即将CC Attention Module循环两次，然后和处理之前的特征进行concate到一起，得到分割结果。
 
@@ -200,5 +202,48 @@ CCNet应用于语义分割领域，将CC Attention Block加到CNN之后来获取
 
 ![CC attention Module细节](https://img-blog.csdnimg.cn/20210203190326469.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
+Affinity操作就是CCNet核心，得到Attention map。CVPR2020有一篇Strip Pooling的文章和CCNet非常相似，也是分横向和竖向两个方向进行学习，然后融合。
+
+## 7. Shuffle Attention
+
+链接：https://arxiv.org/pdf/2102.00240.pdf
+
+Shuffle Attention也是结合了空间注意力机制和通道注意力机制。同时为了减少计算量引入了组，首先将input tensor划分为多个组，每个组内部使用类似SENet的通道注意力机制和使用了GroupNorm的空间注意力机制，最终得到优化后的tensor。
 
 
+
+![SA示意图](https://img-blog.csdnimg.cn/2021020410022231.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+**人工调整：**
+
+- group个数
+- 特征融合方式
+- 激活函数
+
+## 8. ECANet
+
+链接：https://arxiv.org/pdf/1910.03151.pdf
+
+ECANet是CVPR2020接受的文章，在SENet上进行了改进，是单纯的通道注意力，比SENet能高出一个点。
+
+核心思想：避免降维对学习通道注意力很重要，适当跨通道的交互可以降低模型复杂度同时保持性能。核心就是不降维，使用自适应选择一维卷积核大小的方法，来确定局部跨通道交互覆盖率。
+
+![ECANet示意图](https://img-blog.csdnimg.cn/2021020410100472.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+## 9. SGENet
+
+链接：https://arxiv.org/pdf/1905.09646.pdf
+
+Spatial Group-wise Enhance: Improving Semantic Feature Learning in Convolutional Networks 目前没有发表，NIPS2019没中。核心是提出了一种parameter free的注意力机制。
+
+![SGE示意图](https://img-blog.csdnimg.cn/20210204104712398.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+一开始分成多个组，每个组内部使用SENet+Normalization操作，然后合并得到最终结果。和shuffleAttention非常相似。
+
+
+
+## 10. GSoPNet
+
+链接：http://openaccess.thecvf.com/content_CVPR_2019/papers/Gao_Global_Second-Order_Pooling_Convolutional_Networks_CVPR_2019_paper.pdf
+
+Global Second-order Pooling Convolutional Networks发表于CVPR 2019，高阶是
