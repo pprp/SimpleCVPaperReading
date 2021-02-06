@@ -2,6 +2,34 @@
 
 [TOC]
 
+## 0. 总述
+
+注意力主要分为三种类型：空间注意力、通道注意力、Self-Attention。论文阅读注重以下几点：
+
+- motivation
+- method
+- result
+
+可能的思路：
+
+- 搜索attention block，固定插入到人工设计的网络中。
+- 同时搜索attention block和网络结构。
+
+可能的目标：
+
+- 更高的准确率
+- 更少的计算量
+- 内存更加友好
+- 解决某个痛点
+- 针对特定任务
+
+可能的方案：
+
+- spatial -> spp
+- se -> 2nd pool
+- 搜索空间变小，需要领域启发知识。
+- 
+
 ## 1. SENet
 
 链接：https://arxiv.org/abs/1709.01507
@@ -214,12 +242,6 @@ Shuffle Attention也是结合了空间注意力机制和通道注意力机制。
 
 ![SA示意图](https://img-blog.csdnimg.cn/2021020410022231.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-**人工调整：**
-
-- group个数
-- 特征融合方式
-- 激活函数
-
 ## 8. ECANet
 
 链接：https://arxiv.org/pdf/1910.03151.pdf
@@ -240,10 +262,130 @@ Spatial Group-wise Enhance: Improving Semantic Feature Learning in Convolutional
 
 一开始分成多个组，每个组内部使用SENet+Normalization操作，然后合并得到最终结果。和shuffleAttention非常相似。
 
-
-
 ## 10. GSoPNet
 
 链接：http://openaccess.thecvf.com/content_CVPR_2019/papers/Gao_Global_Second-Order_Pooling_Convolutional_Networks_CVPR_2019_paper.pdf
 
-Global Second-order Pooling Convolutional Networks发表于CVPR 2019，高阶是
+Global Second-order Pooling Convolutional Networks发表于CVPR 2019，将高阶和注意力机制在网络中部地方结合起来。
+
+![GSoP Block示意图](https://img-blog.csdnimg.cn/20210205080155283.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
+
+
+
+2nd-order pool 最初是在Semantic segmentation with second-order pooling文章中提出的，采用对称矩阵形式捕获的二阶信息。
+
+> Second-order pooling：在CNN中普通的池化一般都用的是mean pooling max pooling等，这都属于一阶pooling，直接对feature map进行一阶操作。二阶pooling就是对feature map的二阶进行操作，也就是feature map每个向量和自身转置求外积来实现的。
+>
+> 如果特征 x 和特征 y来自两个特征提取器，则被称为多模双线性池化（MBP，Multimodal Bilinear Pooling）；如果特征 x =特征 y，则被称为同源双线性池化（HBP，Homogeneous Bilinear Pooling）或者二阶池化（Second-order Pooling）
+>
+> https://zhuanlan.zhihu.com/p/62532887
+>
+> Low-Rank Bilinear Pooling for Fine grained classification 
+>
+> Compact bilinear model LRBP等等都是这方面工作
+>
+> 二阶池化和Non-Local实际操作是一致的
+
+GSoP Block对协方差矩阵计算，然后进行线性卷积和非线性激活两个运算得到输出的权重再对输入进行通道赋值。属于一个二阶统计的通道注意力机制。高阶也是一个研究的方向。
+
+
+
+## 11. FCANet
+
+链接： https://arxiv.org/pdf/2012.11879.pdf
+
+FcaNet: Frequency Channel Attention Networks
+
+![FCA核心模块](https://img-blog.csdnimg.cn/2021020511305685.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+
+
+## 12. AutoNL
+
+链接： https://cs.jhu.edu/~alanlab/Pubs20/li2020neural.pdf
+Non Local计算代价比较大并且计算资源有限，如何对NL寻找一个最优的配置也是一个开放问题。AutoNL提出就是为了解决以上两个问题，提出了轻量级Non-Local模型，LightNL。
+
+主要有三个贡献：
+
+- 为移动端设备设计了一个轻量级NL Block
+- 提出了高效的神经网络搜索算法来自动化找到最优的LightNL block配置方案
+- 在ImageNet任务上达到了SOTA(轻量级网络MobileNetV2基础上的改进)
+
+![LightNL示意图](https://img-blog.csdnimg.cn/2021020509051375.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+LightNL如上图所示，矩阵乘法运算量更少，同时使用了深度可分离卷积来进行计算，实现了LightNL模块。该模块进行了削减，减少了原来的3个1x1卷积并用深度可分离卷积替换掉Transform部分的1x1卷积，实现了计算量的极小化。
+
+具体搜索方法结合了Single-path NAS和MNasNet，同时对网络架构和Light NL Block参数进行搜索。AutoNL对NL Block的插入位置、降采样方案和模型的计算复杂度进行了搜索和限制。
+
+## 13. STN
+
+
+
+
+
+
+
+## 14. $A^2\text{-Nets}$
+
+核心模块叫double attention mechanism，具体实现分为两步：
+
+- 第一步：使用二阶池化将整个空间的特征汇集到一个紧凑的集合中。
+- 第二步：使用另外一个attention来自适应选择和将特征分散到每个location。
+
+第一个Feature Gathering使用的是Bilinear Pooling, 红色部分对应softmax操作的是spatial维度。
+
+第二个Feature Distribution使用的是矩阵乘，将上一步得到的全局描述符施加到Attention Vector上，红色部分softmax操作的是channel维度。
+
+![DoubleAttention](https://img-blog.csdnimg.cn/20210205112308819.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
+
+总体来说是将NL应用在Spatial和Channel维度。
+
+
+
+## 15. Trilinear Attention
+
+![Trilinear Attention Sampling Network](https://img-blog.csdnimg.cn/20210205113455782.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+
+
+
+
+## 16. APNB
+
+链接：https://arxiv.org/pdf/1908.07678.pdf
+
+针对Non Local Network计算量过大、GPU内存占用高的问题(主要解决分割的问题)，提出了两个模块：Asymmetric Pyramid Non-local Block (**APNB**) 和Asymmetric Fusion Non-local Block (**AFNB**)。
+
+- APNB在Non-Local 基础上使用了金字塔采样模块来减低计算量和内存占用，与此同时并没有牺牲模型的表现。
+- AFNB用于处理不同层的特征，从而可以充分考虑远距离依赖同时提升了模型表现。
+
+![APNB和AFNB示意图](https://img-blog.csdnimg.cn/20210206155418151.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+
+
+具体结构一句话描述就是Non-Local + SPP。实验部分主要和其他分割模型进行了对比，没有对比类似的attention模型。
+
+
+
+## 17. Efficient Attention
+
+
+
+官方解读：https://cmsflash.github.io/ai/2019/12/02/efficient-attention.html
+
+目标依然是降低模型计算量，
+
+
+
+![非正式示意图](https://img-blog.csdnimg.cn/2021020616464334.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+
+
+
+
+![Efficient Attention示意图](https://img-blog.csdnimg.cn/20210206160143549.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+
+
+
+
