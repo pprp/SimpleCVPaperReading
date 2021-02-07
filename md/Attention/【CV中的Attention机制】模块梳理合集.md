@@ -325,9 +325,9 @@ LightNL如上图所示，矩阵乘法运算量更少，同时使用了深度可�
 
 
 
-## 14. $A^2\text{-Nets}$
+## 14. DoubleAttention
 
-核心模块叫double attention mechanism，具体实现分为两步：
+论文名称为：A2-Net，其中的核心模块叫double attention mechanism，具体实现分为两步：
 
 - 第一步：使用二阶池化将整个空间的特征汇集到一个紧凑的集合中。
 - 第二步：使用另外一个attention来自适应选择和将特征分散到每个location。
@@ -342,13 +342,26 @@ LightNL如上图所示，矩阵乘法运算量更少，同时使用了深度可�
 
 
 
-## 15. Trilinear Attention
+## 15. SAN
 
-![Trilinear Attention Sampling Network](https://img-blog.csdnimg.cn/20210205113455782.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+链接：http://vladlen.info/papers/self-attention.pdf
 
+Exploring Self-attention for Image Recognition发表在CVPR20中提出了两个self-attention, pairwise self-attention和patchwise self-attention,用了一些数学公式和抽象的语言来描述，但实际上个人理解是，pairwise self-attention类似channel attention；patchwise self-attention类似spatial attention。（术语比较多，看起来不是很清晰）
 
+- pairwise self-attention相当或者优于卷积网络，开销低。
+  - 普通卷积网络各层执行两个功能：1. 特征聚合，将kernel所有问题特征组合在一起。2. 特征变换，通过连续的线性映射和非线性函数来完成，通过连续的映射和非线性操作产生复杂的分段映射。
+  - 这部分提出了特征聚合和特征转换可以解耦。特征转换可以通过感知机层来执行，处理对象是**像素级别**的对象，是一个点态操作。
 
+- patchwise self-attention大大优于卷积。
+  - 这部分的注意力是在一个局部patch内进行计算的，可以理解成spatial部分区域。
 
+自注意力网络在鲁棒性和泛化方面可能更具优势。
+
+![SA block示意图](https://img-blog.csdnimg.cn/20210207211034689.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
+
+看一下SA block设计，其中的aggregation的实现就是hadamard product, 要求两个张量维度必须一致；左侧路径先通过linear层，channel数变为C/r1, $\gamma$ 实现是Linear - ReLU - Linear进行转换。
+
+总体来说，理论性很强，如果写文章的话，需要在精读几遍，学一下语言描述。
 
 ## 16. APNB
 
@@ -369,11 +382,9 @@ LightNL如上图所示，矩阵乘法运算量更少，同时使用了深度可�
 
 ## 17. Efficient Attention
 
+（未发表）官方解读：https://cmsflash.github.io/ai/2019/12/02/efficient-attention.html
 
-
-官方解读：https://cmsflash.github.io/ai/2019/12/02/efficient-attention.html
-
-目标依然是降低模型计算量，
+目标依然是降低模型计算量:
 
 
 
@@ -381,11 +392,7 @@ LightNL如上图所示，矩阵乘法运算量更少，同时使用了深度可�
 
 
 
-
-
-![Efficient Attention示意图](https://img-blog.csdnimg.cn/20210206160143549.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
-
-
+通过线性代数运算的顺序确定，减小了attenion mask的维度，降低计算量，可能创新性不够。
 
 
 
