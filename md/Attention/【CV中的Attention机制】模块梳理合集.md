@@ -396,3 +396,15 @@ Exploring Self-attention for Image Recognition发表在CVPR20中提出了两个s
 
 
 
+## 18. OCRNet
+
+
+
+
+
+## 19. IAU-Net
+
+
+
+
+
