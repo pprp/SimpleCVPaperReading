@@ -469,3 +469,13 @@ Gather-Excite: Exploiting Feature Context in Convolutional Neural Networks是SEN
 - excite: 激发这些信息，将聚合得到的信息重新分配到局部特征。
 
 具体实现方式是，将SENet中的Global Pooling替换为深度可分离卷积，完成上下文信息提取，然后就和SE一致，先及性能上采样，得到与输入tensor相同的大小，经过sigmoid激活函数得到attention，完成激活过程。
+
+
+
+## 22. Triplet Attention
+
+链接：https://arxiv.org/pdf/2010.03045.pdf
+
+WACV2021的印度小哥的文章，让不同维度之间的信息互相交互起来，三个维度CHW，让它们两两进行交互。其中的Z-Pool其实就是maxpool和avgpool进行concate以后的结果。(好像是水会)
+
+![](https://img-blog.csdnimg.cn/20210208234546725.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
