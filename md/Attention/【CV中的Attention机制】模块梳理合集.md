@@ -470,12 +470,20 @@ Gather-Excite: Exploiting Feature Context in Convolutional Neural Networks是SEN
 
 具体实现方式是，将SENet中的Global Pooling替换为深度可分离卷积，完成上下文信息提取，然后就和SE一致，先及性能上采样，得到与输入tensor相同的大小，经过sigmoid激活函数得到attention，完成激活过程。
 
-
-
-## 22. Triplet Attention
+## 22. Triplet Attention(WACV21)
 
 链接：https://arxiv.org/pdf/2010.03045.pdf
 
-WACV2021的印度小哥的文章，让不同维度之间的信息互相交互起来，三个维度CHW，让它们两两进行交互。其中的Z-Pool其实就是maxpool和avgpool进行concate以后的结果。(好像是水会)
+WACV2021的印度小哥的文章，让不同维度之间的信息互相交互起来，三个维度CHW，让它们两两进行交互。其中的Z-Pool其实就是maxpool和avgpool进行concate以后的结果。
 
-![](https://img-blog.csdnimg.cn/20210208234546725.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
+![Triplet Attention模块](https://img-blog.csdnimg.cn/20210208234546725.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
+
+## 23. Dual Attention(CVPR19)
+
+链接：https://arxiv.org/pdf/1809.02983.pdf
+
+中科院发表在CVPR19上的论文，提出Dual Attention来解决捕捉长距离依赖问题。类似self-attention, 上边的position attention module对spatial level信息进行建模，是一种空间注意力机制，实现方式是self-attention。
+
+下边的channel attention module对channel level信息进行建模，也是用的self-attention机制，最后通过加和的方式进行特征融合。
+
+![Dual Attention示意图](https://img-blog.csdnimg.cn/20210209000444894.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
