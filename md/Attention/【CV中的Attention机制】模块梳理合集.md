@@ -487,3 +487,17 @@ WACV2021的印度小哥的文章，让不同维度之间的信息互相交互起
 下边的channel attention module对channel level信息进行建模，也是用的self-attention机制，最后通过加和的方式进行特征融合。
 
 ![Dual Attention示意图](https://img-blog.csdnimg.cn/20210209000444894.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+## 24. RGA(CVPR20)
+
+链接：https://arxiv.org/pdf/1904.02998v1.pdf
+
+微软提出的用于行人REID领域的模块，初步看上去，和Dual Attention非常类似，一个是spatial level的self-attention，一个是channel level 的self-attention。对比的对象也是大部分18年发表的顶会，少部分是19年发布的，通过加入该模块，baseline可以提高几个点。
+
+![空间/通道关系全局注意力](https://img-blog.csdnimg.cn/20210209084434961.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+## 25. AFF(WACV21)
+
+链接：https://arxiv.org/pdf/2009.14082.pdf
+
+注意力特征融合机制AFF，可以用于
