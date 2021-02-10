@@ -494,10 +494,20 @@ WACV2021的印度小哥的文章，让不同维度之间的信息互相交互起
 
 微软提出的用于行人REID领域的模块，初步看上去，和Dual Attention非常类似，一个是spatial level的self-attention，一个是channel level 的self-attention。对比的对象也是大部分18年发表的顶会，少部分是19年发布的，通过加入该模块，baseline可以提高几个点。
 
-![空间/通道关系全局注意力](https://img-blog.csdnimg.cn/20210209084434961.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+![空间/通道关系全局注意力](https://img-blog.csdnimg.cn/20210209084434961.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
 
-## 25. AFF(WACV21)
+## 25. Attentional Feature Fusion(WACV21)
 
 链接：https://arxiv.org/pdf/2009.14082.pdf
 
-注意力特征融合机制AFF，可以用于
+Attentional Feature Fusion注意力特征融合机制AFF，可以用于分割、分类、检测等任务。目标是融合语义和尺度不一致特征，并且还提出了多尺度通道注意力模块。
+
+Multi-Scale Channel Attention Modul(MS-CAM)核心思想是通过改变空间池化大小，将局部上下文信息添加到全局上下文中，并且使用逐点卷积作为上下文融合器。
+
+![MS-CAM模块](https://img-blog.csdnimg.cn/20210209091902350.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_10,color_FFFFFF,t_70)
+
+左侧分支是类似SENet的通道注意力，右侧对应的是空间注意力机制，两者融合得到混合域注意力机制，这个和普通的注意力模块是一样的，可以对单个tensor进行优化。
+
+特征融合模块AFF和iAFF如下图所示，这样融合的计算量真的很大。iAFF的提出是为了解决初始融合输入特征，直观方法是再使用一个attention来融合输入特征，得到了Iterative Attentional Feature Fusion。
+
+![AFF&iAFF](https://img-blog.csdnimg.cn/20210209093619472.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
