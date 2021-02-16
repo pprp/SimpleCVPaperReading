@@ -1,6 +1,6 @@
 # 【CV中的Attention机制】ShuffleAttention
 
-【GiantPandaCV导语】这个系列已经好几个月没有更新了，开始继续更这个方向论文，19年、20年又出现了很多关于Attention的研究，本文SA-Net:shuffle attention for deep convolutional neural networks 发表在ICASSP 21，传承了SGE的设计理念的同时，引入Channel Shuffle，达到了比较好的效果，有理有据。
+【GiantPandaCV导语】这个系列已经好几个月没有更新了，开始继续更这个方向论文，19年、20年又出现了很多关于Attention的研究，本文SA-Net:shuffle attention for deep convolutional neural networks 发表在ICASSP 21，传承了SGE的设计理念的同时，引入Channel Shuffle，达到了比较好的效果，有理有据。文章首发于GiantPandaCV，请勿二次转载。
 
 ## 1. 摘要
 

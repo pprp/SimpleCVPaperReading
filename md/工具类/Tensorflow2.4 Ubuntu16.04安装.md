@@ -127,31 +127,31 @@ cp cudnn-11.2-linux-x64-v8.1.0.77.solitairetheme8 cudnn-11.2-linux-x64-v8.1.0.77
 sudo tar -xzf cudnn-11.2-linux-x64-v8.1.0.77.tgz -C /usr/local
 ```
 
+## 5、Tensorflow2.4安装
+
+安装最新版的非常简单，直接通过pip安装即可。
+
+```
+pip install tensorflow-gpu -U
+```
 
 
-
-
-
-
-
-如果不配置
+如果没有配置好驱动、cuda、cudnn的情况，运行tensorflow会遇到以下问题。
 
 ![](https://img-blog.csdnimg.cn/20210216000026334.png)
 
-
-
-测试结果：
+安装成功的情况下就如下图所示。
 
 ![](https://img-blog.csdnimg.cn/20210216074516711.png)
 
+## 6、PyTorch 1.7 安装
 
+按照官网提示的命令进行安装，直接通过pip安装即可，注意选择好对应的cuda版本。
 
+```
+pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 -f https://download.pytorch.org/whl/torch_stable.html
+```
 
-
-
-
-
-
-
+![](https://img-blog.csdnimg.cn/20210216091658516.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
 
