@@ -68,20 +68,80 @@ docker images查看镜像
 
 删除镜像： docker rmi 镜像id
 
-保存docker镜像: docker save 镜像id > 1.tar
+保存docker镜像: docker save/export 镜像id > 1.tar
 
-加载docker镜像: docker load < 1.tar
+加载docker镜像: docker load< 1.tar or cat docker/ubuntu.tar | docker import - test/ubuntu:v1
 
 退出容器：exit
 
 退出容器但不关闭容器Crtl+P+Q
 
+查看log: docker logs + 容器id
 
+停止/启动容器：docker stop/start + 容器id
+
+载入、获取镜像： docker pull ubuntu
+
+当使用了docker run -d 的时候，代表容器在后台运行，想要进入容器需要使用命令：docker exec + 容器id
+
+清理所有终止状态的容器：docker container prune
+
+查看容器内部进程：docker top 容器名称
+
+清理所有None的镜像：docker image prune or docker rmi $(docker images -f "dangling=true" -q)
+
+查找镜像：docker search 字段
+
+查看挂载情况：docker volume inspect volume_idxx
+
+将容器转化为镜像：需要退出但不关闭容器，ctrl+p+q以后，使用命令docker commit+容器id 仓库地址+版本号
 
 ## 4. Dockfile
 
 Dockerfile 是一个用来构建镜像的文本文件，文本内容包含了一条条构建镜像所需的指令和说明。
 
-- FROM + 连接 ： 构建镜像
+- FROM + 连接 ： 构建镜像 这里也可以添加本地镜像id，这样就可以不频繁从网络上下载了。
+
+  `FROM 756 As build`
+
 - RUN + 命令： 执行的命令 eg: RUN ['sh', 'run.sh']
-- 
+
+- ADD . / 将本地目录映射到容器中的/下边
+
+- CMD ['sh', 'run.sh'] 运行命令
+
+## 5. Nvidia-docker
+
+docker 安装
+
+- 安装：sudo apt install docker.io 
+- 验证：sudo docker info
+
+nvidia-docker安装方式：
+
+```
+sudo usermod -aG docker pdluser
+
+curl https://get.docker.com | sh
+ 
+sudo systemctl start docker && sudo systemctl enable docker
+ 
+# 设置stable存储库和GPG密钥：
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+ 
+curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+ 
+curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+ 
+# 要访问experimental诸如WSL上的CUDA或A100上的新MIG功能之类的功能，您可能需要将experimental分支添加到存储库列表中.
+# 可加可不加
+curl -s -L https://nvidia.github.io/nvidia-container-runtime/experimental/$distribution/nvidia-container-runtime.list | sudo tee /etc/apt/sources.list.d/nvidia-container-runtime.list
+ 
+# nvidia-docker2更新软件包清单后，安装软件包（和依赖项）：
+sudo apt-get update
+ 
+sudo apt-get install -y nvidia-docker2
+ 
+# 设置默认运行时后，重新启动Docker守护程序以完成安装：
+sudo systemctl restart docker
+```
