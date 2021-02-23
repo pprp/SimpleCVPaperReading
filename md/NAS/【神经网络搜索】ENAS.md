@@ -23,7 +23,7 @@ ENAS可以做到使用单个NVIDIA GTX 1080Ti显卡，只需要花费16个小时
 
 ## 3. 方法
 
-**一个例子**
+### 3.1 **一个例子**
 
 ENAS可以看作是从一个超网中得到一个自网络，如下图所示。6个节点相互连接得到的就是超网（是一个有向无环图），通过controller得到红色的路径就是其中的一个子网络。
 
@@ -54,7 +54,7 @@ ENAS可以看作是从一个超网中得到一个自网络，如下图所示。6
 
 其中$4^N$代表N个节点可选的4个激活函数组成的空间，$N!$ 代表节点的连接情况，之所以是阶乘也很容易理解，因为随后的Node只能连接之前出现过的Node。
 
-**ENAS训练流程**
+### 3.2 **ENAS训练流程**
 
 在ENAS中，有两组可学习参数，Controller LSTM中的参数$\theta$ 和 子模型共享的权重参数$w$。具体流程是：
 
@@ -80,22 +80,31 @@ m是从$\pi(m;\theta)$ 中采样得到的模型，对于所有的模型计算模
 
 
 
-**设计卷积网络的方法**
+### 3.3 **设计卷积网络的方法**
 
 ![](https://img-blog.csdnimg.cn/20210223220424643.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
 有了上边的例子做铺垫，卷积的这部分就很好理解了，区别有几点：
 
-- 节点操作不同，这里可以是3x3卷积、5x5卷积、平均池化、3x3最大池化、直连 一共五个操作。
-- 链接
+- 节点操作不同，这里可以是3x3卷积、5x5卷积、平均池化、3x3最大池化、3x3深度可分离卷积，5x5深度可分离卷积 一共六个操作。
+- 上图Node3输出了两个值，代表先将node1和node2的输出tensor合并，然后在经过maxpool操作。
 
+计算卷积网络设计的空间复杂度，对于第k个节点，顶多可以选取k-1个层，所以在第k层就有$2^{k-1}$种选择，而这里假设一共有L个层需要做从6个候选操作中做选择。那么在不考虑连线的情况下就有$6^L$可能被挑选的操作，由于所有连线都是独立事件，那复杂度计算就是：$6^L\times 2^{L(L-1)/2}$（除以2是因为连线具有对称性，采样1,2和2,1结果是一致的）。
 
+### 3.4 Cell-Based 设计思路
 
+ENAS中首次提出了搜索一个一个单元，然后将单元组合拼接成整个网络。其中单元分为两种类型，一种是Conv Cell 该单元不改变特征图的空间分辨率；另外一种是Reduction Cell 该单元会将空间分辨率降低为原来的一半。
 
+![Cell-Based](https://img-blog.csdnimg.cn/2021022323194471.png)
 
+假定每个cell里边有B个节点，由于网络设定是node1和node2是单元的输入，所以刚开始这部分需要特殊处理，固定两个单元，搜索随后的单元，即还剩下B-2个节点需要搜索。
 
+![Controller for cells](https://img-blog.csdnimg.cn/20210223232242148.png)
 
+如上图所示，从node3开始生成，首先生成两个需要连接的两个对象，indexA和indexB; 然后生成两个op, 分别是sep 5x5和直连id。将操作sep 5x5施加到indexA对应节点上；将操作直连施加到indexB对应节点上，然后通过add的方式融合特征。
 
+![生成的结果，注意前两个node是固定的](https://img-blog.csdnimg.cn/20210223232546952.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_10,color_FFFFFF,t_70)
 
+搜索空间复杂度计算：首先分为Conv Cell和Reduction Cell，由于他们并没有本质不同，只是所有的操作的stride设置为2，复杂度也是一样的。
 
-
+假定当前是第i个节点，可以选择来自先前i-1个节点中的两个节点，并且可选操作有5个。假设只选择一个节点，那么复杂度是$5\times (B-2)!$, 由于要选择两个节点，两个节点的选择是互相独立的，所以复杂度计算变为：$(5\times (B-2)!)^2$ 。而又有Reduction Cell和Conv Cell也是互相独立的，所以复杂度变为$(5\times (B-2)!)^4$ ，计算完毕。
