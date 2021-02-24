@@ -80,7 +80,7 @@ m是从$\pi(m;\theta)$ 中采样得到的模型，对于所有的模型计算模
 
 
 
-### 3.3 **设计卷积网络的方法**
+### 3.3 marco search space
 
 ![](https://img-blog.csdnimg.cn/20210223220424643.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
@@ -91,7 +91,7 @@ m是从$\pi(m;\theta)$ 中采样得到的模型，对于所有的模型计算模
 
 计算卷积网络设计的空间复杂度，对于第k个节点，顶多可以选取k-1个层，所以在第k层就有$2^{k-1}$种选择，而这里假设一共有L个层需要做从6个候选操作中做选择。那么在不考虑连线的情况下就有$6^L$可能被挑选的操作，由于所有连线都是独立事件，那复杂度计算就是：$6^L\times 2^{L(L-1)/2}$（除以2是因为连线具有对称性，采样1,2和2,1结果是一致的）。
 
-### 3.4 Cell-Based 设计思路
+### 3.4 micro search space
 
 ENAS中首次提出了搜索一个一个单元，然后将单元组合拼接成整个网络。其中单元分为两种类型，一种是Conv Cell 该单元不改变特征图的空间分辨率；另外一种是Reduction Cell 该单元会将空间分辨率降低为原来的一半。
 
@@ -108,3 +108,213 @@ ENAS中首次提出了搜索一个一个单元，然后将单元组合拼接成�
 搜索空间复杂度计算：首先分为Conv Cell和Reduction Cell，由于他们并没有本质不同，只是所有的操作的stride设置为2，复杂度也是一样的。
 
 假定当前是第i个节点，可以选择来自先前i-1个节点中的两个节点，并且可选操作有5个。假设只选择一个节点，那么复杂度是$5\times (B-2)!$, 由于要选择两个节点，两个节点的选择是互相独立的，所以复杂度计算变为：$(5\times (B-2)!)^2$ 。而又有Reduction Cell和Conv Cell也是互相独立的，所以复杂度变为$(5\times (B-2)!)^4$ ，计算完毕。
+
+## 4. 实验结果
+
+主要是在NLP中常用的语料库Penn Treebank和CV中经典的数据集CIFAR-10上进行了实验。
+
+### 4.1 语言模型
+
+在单个GTX 1080Ti上训练了10个小时，达到了55.8的test perplexity, 下图是通过ENAS找到的RNN单元。
+
+![通过搜索发现的RNN单元](https://img-blog.csdnimg.cn/20210224075808103.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
+
+结果如下：
+
+![ENAS和其他结果对比](https://img-blog.csdnimg.cn/20210224080126896.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
+
+### 4.2 图像分类
+
+**数据集**：CIFAR10有5w张训练图片和1w张测试图片，使用标准的数据预处理和数据增强方法：如将训练图片padding到40x40大小，然后随机裁剪到32x32，水平随机反转。
+
+**训练细节:** 共享权重w使用Nesterov momentum来训练，使用cosine schedule调整lr，lr最大设置为0.05，最小设置为0.001，T0=10, Tmul=2。每个子网络设置运行310个epoch。权重初始化使用He initialization。weight decay设置为$10^{-4}$。
+
+controller的设置细节，policy gradient的权重$\theta$使用均匀的从[-0.1，0.1]初始化，使用0.00035的学习率,使用Adam优化器，设置tanh常数为2.5 temerature 设置为5.0; 给controller 得到的熵添加0.1的权重。
+
+在macro搜索空间中，通过在skip connection两层之间添加KL 散度来增加稀疏性, KL散度项对应的权重设置为0.8.
+
+![使用Macro空间得到的搜索结果](https://img-blog.csdnimg.cn/20210224081841365.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
+
+![Micro空间搜索得到的结果](https://img-blog.csdnimg.cn/2021022408263178.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
+
+实验结果对比如下：
+
+![实验结果对比](https://img-blog.csdnimg.cn/20210224081932530.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
+
+## 5. 代码实现
+
+代码这里参考NNI中的实现，以macro为例，ENASLayer实现如下：
+
+```python
+class ENASLayer(mutables.MutableScope):
+
+    def __init__(self, key, prev_labels, in_filters, out_filters):
+        super().__init__(key)
+        self.in_filters = in_filters
+        self.out_filters = out_filters
+
+        self.mutable = mutables.LayerChoice([
+            ConvBranch(in_filters, out_filters, 3, 1, 1, separable=False),
+            ConvBranch(in_filters, out_filters, 3, 1, 1, separable=True),
+            ConvBranch(in_filters, out_filters, 5, 1, 2, separable=False),
+            ConvBranch(in_filters, out_filters, 5, 1, 2, separable=True),
+            PoolBranch('avg', in_filters, out_filters, 3, 1, 1),
+            PoolBranch('max', in_filters, out_filters, 3, 1, 1),
+            SEConvBranch(in_filters, out_filters, 3, 1, 1, reduction=4)
+        ])
+        if len(prev_labels) > 0:
+            self.skipconnect = mutables.InputChoice(
+                choose_from=prev_labels, n_chosen=None)
+        else:
+            self.skipconnect = None
+        self.batch_norm = nn.BatchNorm2d(out_filters, affine=False)
+
+    def forward(self, prev_layers):
+        out = self.mutable(prev_layers[-1])
+        if self.skipconnect is not None:
+            connection = self.skipconnect(prev_layers[:-1])
+            if connection is not None:
+                out += connection
+        return self.batch_norm(out)
+```
+
+其中的mutables是NNI中的一个核心类，可以从LayerChoice所提供的选择中挑选一个操作，其中最后一个SEConvBranch是笔者自己补充上去的。
+
+- mutable LayerChoice就是从备选选项中选择其中一个操作
+- mutable InputChoice是选择前几层节点进行连接。
+
+主干网络如下：
+
+```python
+class GeneralNetwork(nn.Module):
+    def __init__(self, num_layers=6, out_filters=12, in_channels=3, num_classes=10,
+                 dropout_rate=0.0):
+        super().__init__()
+        self.num_layers = num_layers
+        self.num_classes = num_classes
+        self.out_filters = out_filters
+        self.dropout_rate = dropout_rate
+
+        self.stem = nn.Sequential(
+            nn.Conv2d(in_channels, out_filters, 3, 1, 1, bias=False),
+            nn.BatchNorm2d(out_filters)
+        )
+
+        pool_distance = self.num_layers // 3
+        # 进行pool操作是num_layers // 3
+        self.pool_layers_idx = [pool_distance - 1, 2 * pool_distance - 1]
+        self.dropout = nn.Dropout(self.dropout_rate)
+
+        self.layers = nn.ModuleList()  # convolutional
+        self.pool_layers = nn.ModuleList()  # reduction
+
+        labels = []
+        for layer_id in range(self.num_layers):  # 设置12个layer
+            labels.append("layer_{}".format(layer_id))
+
+            if layer_id in self.pool_layers_idx:  # 如果使用pool
+                self.pool_layers.append(FactorizedReduce(
+                    self.out_filters, self.out_filters))
+
+            self.layers.append(  # 相当于Node节点
+                ENASLayer(labels[-1], labels[:-1], self.out_filters, self.out_filters))
+
+        self.gap = nn.AdaptiveAvgPool2d(1)
+        self.dense = nn.Linear(self.out_filters, self.num_classes)
+
+    def forward(self, x):
+        bs = x.size(0)
+        cur = self.stem(x)  
+
+        layers = [cur]
+
+        for layer_id in range(self.num_layers):
+            cur = self.layers[layer_id](layers)
+            layers.append(cur)
+            if layer_id in self.pool_layers_idx:
+                # 如果轮到了池化层
+                for i, layer in enumerate(layers):
+                    layers[i] = self.pool_layers[self.pool_layers_idx.index(
+                        layer_id)](layer)
+                cur = layers[-1]
+
+        cur = self.gap(cur).view(bs, -1)
+        cur = self.dropout(cur)
+        logits = self.dense(cur)
+        return logits
+```
+
+需要注意有几个点：
+
+- self.stem是第一个node，手动设置的。
+- 池化是强制设置的，在某些层规定进行下采样。
+
+搜索过程调用了NNI提供的API:
+
+```python
+model = GeneralNetwork()
+trainer = enas.EnasTrainer(model,
+                           loss=criterion,
+                           metrics=accuracy,
+                           reward_function=reward_accuracy,
+                           optimizer=optimizer,
+                           callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")],
+                           batch_size=args.batch_size,
+                           num_epochs=num_epochs,
+                           dataset_train=dataset_train,
+                           dataset_valid=dataset_valid,
+                           log_frequency=args.log_frequency,
+                           mutator=mutator)
+```
+
+mutator是NNI提供的一个类，就是上述提到的controller，这里具体调用的是EnasMutator。
+
+```python
+def _sample_layer_choice(self, mutable):
+    # 选择 某个层 只需要选一个就可以了
+    self._lstm_next_step() # 让_inputs在lstm中进行一次前向传播
+
+    logit = self.soft(self._h[-1]) # linear 从隐藏层embedd得到可选的层的逻辑评分
+
+    if self.temperature is not None:
+        logit /= self.temperature # 一个常量 貌似是RL中的trick
+
+    if self.tanh_constant is not None:
+        # tanh_constant * tanh(logits) 用tanh再激活一次（可选）
+        logit = self.tanh_constant * torch.tanh(logit)
+
+    if mutable.key in self.bias_dict:
+        logit += self.bias_dict[mutable.key]
+        # 对卷积层进行了偏好处理，如果是卷积层，那就在对应的值加上一个0.25，增大被选中的概率
+    
+    # softmax, view(-1), 
+    branch_id = torch.multinomial(F.softmax(logit, dim=-1), 1).view(-1) 
+    # 依据概率来选下角标，如果数量不为1，选择的多个中没有重复的 
+    # eg: [100,1,1] 最有可能选择100对应的下标0
+        
+    log_prob = self.cross_entropy_loss(logit, branch_id) # 交叉熵损失函数 - 判断logit和branchid分布是否相似程度
+
+    self.sample_log_prob += self.entropy_reduction(log_prob) # 求和或者求平均
+    
+    entropy = (log_prob * torch.exp(-log_prob)).detach()  # pylint: disable=invalid-unary-operand-type　??
+    
+    self.sample_entropy += self.entropy_reduction(entropy) # 样本熵？
+
+    self._inputs = self.embedding(branch_id) # 得到对应id的embedding, 从选择空间 - 映射到 - 隐空间
+
+    return F.one_hot(branch_id, num_classes=self.max_layer_choice).bool().view(-1) # 将选择变成one_hot向量
+```
+
+这部分是EnasMutator中一个核心函数，实现的是REINFORCE算法。
+
+```python
+if self.entropy_weight: # 交叉熵权重 
+	reward += self.entropy_weight * self.mutator.sample_entropy.item() # 得到样本熵
+```
+
+## 6. 总结
+
+ENAS核心就是提出了一个超网，每次从超网中采样一个小的网络进行训练。所有的子网络都是共享超网中的一套参数，这样每次训练就不是从头开始训练，而是进行了迁移学习，加快了训练速度。
+
+有注释代码链接如下：https://github.com/pprp/SimpleCVReproduction/tree/master/nni
+
