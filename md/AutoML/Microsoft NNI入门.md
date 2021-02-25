@@ -1,6 +1,6 @@
 # Microsoft NNI入门
 
-【GiantPandaCV导语】Neural Network Intelligence 是一个工具包，可以有效帮助用户设计并调优汲取学习模型的神经网络架构，以及超参数。具有易于使用、可扩展、灵活、高效的特点。本文主要讲NNI基础的概念以及一个训练MNIST的入门教程。
+【GiantPandaCV导语】Neural Network Intelligence 是一个工具包，可以有效帮助用户设计并调优汲取学习模型的神经网络架构，以及超参数。具有易于使用、可扩展、灵活、高效的特点。本文主要讲NNI基础的概念以及一个训练MNIST的入门教程。本文首发于GiantPandaCV，未经允许，不得转载。
 
 
 
@@ -251,8 +251,6 @@ trial:
   gpuNum: 1 # 使用gpu数目
 ```
 
-
-
 一切准备就绪，在命令行启动MNIST Experiment:
 
 ```
@@ -264,6 +262,8 @@ nnictl create --config config.yml
 访问上图展示的连接，可以看到NNI Web UI界面。
 
 ![](https://img-blog.csdnimg.cn/20210221173653506.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+官方提供的教程基于tensorflow 1.x，详细了解请看 https://nni.readthedocs.io/zh/stable/Tutorial/QuickStart.html
 
 
 
