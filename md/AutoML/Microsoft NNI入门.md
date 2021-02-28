@@ -265,7 +265,7 @@ nnictl create --config config.yml
 
 官方提供的教程基于tensorflow 1.x，详细了解请看 https://nni.readthedocs.io/zh/stable/Tutorial/QuickStart.html
 
-
+后续会陆陆续续出关于NAS使用教程，敬请期待。
 
 
 
