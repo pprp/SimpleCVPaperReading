@@ -1,10 +1,8 @@
 # 【神经网络搜索】DARTS: Differentiable Architecture Search
 
-【GiantPandaCV】DARTS将离散的搜索空间松弛，从而可以用梯度的方式进行优化，从而求解神经网络搜索问题。本文首发于GiantPandaCV，未经允许，不得转载。
+【GiantPandaCV】DARTS将离散的搜索空间松弛，从而可以用梯度的方式进行优化，从而求解神经网络搜索问题。本文首发于GiantPandaCV，未经允许，不得转载。![https://arxiv.org/pdf/1806.09055v2.pdf](https://img-blog.csdnimg.cn/20210226222235337.png)
 
-![https://arxiv.org/pdf/1806.09055v2.pdf](https://img-blog.csdnimg.cn/20210226222235337.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
 
-[TOC]
 
 ## 1. 简介
 
@@ -132,7 +130,7 @@ $$
 
 利用最右下角的公式：
 
-令$A=\nabla_{\omega^{\prime}} \mathcal{L}_{v a l}\left(\omega^{\prime}, \alpha\right)$,$h=\epsilon$, $x_0=w$, $f=\nabla_{\alpha} \mathcal{L}_{\text {train }}(\cdot, \cdot)$, 代入可得
+令$A=\nabla_{\omega^{\prime}} \mathcal{L}_{v a l}\left(\omega^{\prime}, \alpha\right)$,$h=\epsilon$, $x_0=w$, $f=\nabla_{\alpha} \mathcal{L}_{\text {train }}(\cdot, \cdot)$, 代入可得(其中经验上设置$\epsilon=\frac{0.01}{||\nabla_{w'}\mathcal{L}_{val}(w',\alpha)||_2}$)
 $$
 \nabla_{\alpha, \omega}^{2} \mathcal{L}_{\text {train }}(\omega, \alpha) \cdot \nabla_{\omega^{\prime}} \mathcal{L}_{\text {val }}\left(\omega^{\prime}, \alpha\right) \approx \frac{\nabla_{\alpha} \mathcal{L}_{\text {train }}\left(\omega^{+}, \alpha\right)-\nabla_{\alpha} \mathcal{L}_{\text {train }}\left(\omega^{-}, \alpha\right)}{2 \epsilon}
 $$
@@ -145,18 +143,73 @@ $$
 
 这样就可以将二次梯度转化为多个一次梯度。到这里复杂度从$O(|\alpha||w|)$优化到$O(|\alpha|+|w|)$
 
+**一阶近似：** 当$\xi=0$, 下面式子的二阶倒数部分就消失了，这样模型的梯度计算可能不够准确，效果虽然不如二阶，但是计算速度快。只需要假设当前的$w$就是$w*(\alpha)$, 然后启发式优化验证集上的loss值即可。
+
+![计算结果](https://img-blog.csdnimg.cn/20210301105536805.png)
+
+代码实现上也有一定的区别，代码将在下一篇讲解。
+
+## 5. 实验设置
+
+这里我们暂且先关注CIFAR10上的实验效果。DARTS构成网络的方式之前已经提到了，首先为每个单元内布使用DARTS进行搜索，通过在验证集上的表现决定最好的单元然后使用这些单元构建更大的网络架构，然后从头开始训练，报告在测试集上的表现。
+
+CIFAR10上搜索操作有：
+
+- 3x3 & 5x5 可分离卷积
+- 3x3 & 5x5 空洞可分离卷积
+- 3x3 max & avg pooling
+- identiy
+- zero
+
+实验详细设置：
+
+- 所有操作的stride=1, 为了保证他们空间分辨率，使用了padding。
+- 卷积操作使用的是ReLU-Conv-BN的顺序，并且每个可分离卷积会被使用两次。
+
+- 卷积单元包括了7个节点，输出节点为所有中间节点concate以后的结果。
+- 网络整体深度的1/3和2/3处强制设置了reduction cell来降低空间分辨率。
+- 网络结构参数$\alpha_{\text{normal}}$是被所有normal cell共享的，同理$\alpha_{\text{reduce}}$是被所有reduction cell共享的。
+- 并没有使用全局batch normalization, 使用的是batch-specific statistic batch normalization
+- CIFAR10一半的训练集作为验证集。
+- 8个单元的消亡了使用DARTS训练50个epoch, batch size设置为64， 初始通道个数为16。
+- 使用momentum SGD来优化权重，初始学习率设置为0.025，momentum 0.9 weight decay为0.0004.
+- 网络架构参数$\alpha$ 使用0作为初始化，使用Adam优化器来优化$\alpha$参数，初始学习率设置为0.0004，momentum为（0.5，0.999）weight decay=0.001。
+
+![CIFAR10上搜索结果和其他算法对比](https://img-blog.csdnimg.cn/20210301144537229.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
+
+可以看到，搜索结果最终是优于AmoebaNet-A和NASNet-A。具体搜索得到的Normal Cell和Reduction Cell可视化如下：
+
+![Normal Cell & Reduction Cell for CIFAR10](https://img-blog.csdnimg.cn/2021030115002637.png)
+
+**网络评价**
+
+网络优化对初始化值是非常敏感的，为了确定最终的网络结构，DARTS将使用随机种子运行四次，每次得到的Cell都会在训练集上从头开始训练很短一段时间大概100 epochs , 然后根据**验证集**上得到的最优结果决定最终的架构。
+
+为了验证被选择的架构：
+
+- 随机初始化权重
+- 从头开始训练
+- 报告**测试集**上的模型表现
+
+CIFAR10搜索的模型迁移到ImageNet更多细节：
+
+- 20个单元的大型网络使用了96的batch size， 训练了600个epoch
+- 初始通道个数由16修改为36，为了让模型的参数和其他模型参数量相当。
+- 其他参数设置和搜索过程中参数一样
+- 使用了cutout的数据增强方法，以0.2的概率进行path dropout 
+- 使用了auxiliary tower(辅助头，在这里施加loss, 提前进行反向传播，InceptionV3中提出)
+- 使用PyTorch在单个GPU上花费1.5天时间训练完ImageNet，独立训练10次作为最终的结果。
+
+![CIFAR10上搜索结果](https://img-blog.csdnimg.cn/20210301151232508.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+使用二阶优化方法+cutout的数据增强方法，DARTS能达到约2.76的准确率，笔者使用nni进行了实验，最终结果是2.6%的Test Error。
+
+![nni上darts的实验结果](https://img-blog.csdnimg.cn/20210227101330429.png)
 
 
 
 
-
-
-
-
-
-
-
-## 致谢
+## 6. 致谢&参考
 
 感谢师兄提供的资料，以及知乎上两位大佬，他们文章链接如下：
 
