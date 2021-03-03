@@ -2,7 +2,9 @@
 
 【GiantPandaCV导语】本文介绍NNI PyTorch版实现神经网络过程搜索过程中的几个重要的类，比如LayerChoice和InputChoice，对这两个类有了初步认识以后，就可以设计自己的搜索空间。
 
-## 1. Mutable类![笔者画的类图（后续会扩充）](https://img-blog.csdnimg.cn/20210302194126193.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_Y3NkbkBwcHJw,size_16,color_FFFFFF,t_70)
+## 1. Mutable类
+
+![笔者画的类图（后续会扩充）](https://img-blog.csdnimg.cn/20210302194126193.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_Y3NkbkBwcHJw,size_16,color_FFFFFF,t_70)
 
 
 
@@ -202,3 +204,5 @@ class InputChoice(Mutable):
 ```
 
 前向传播的选择还是通过调用mutator的on_forward_input_choice函数来决定选择哪条路径连接。
+
+
