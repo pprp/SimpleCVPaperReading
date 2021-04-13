@@ -4,7 +4,9 @@
 
 ![](https://img-blog.csdnimg.cn/20210406084948885.png)
 
+代码：https://github.com/megvii-model/SinglePathOneShot
 
+论文：https://arxiv.org/abs/1904.00420
 
 ## 摘要
 
@@ -81,7 +83,7 @@ a代表被采样的子网架构，它会继承超网的权重$W_{\mathcal{A}}(a)
 
 **基于均匀采样的单路径方法缓解耦合问题**
 
-权重共享的神经网络搜索方法背后有一个基础原则：即**继承权重后的子网络在验证集上的表现能够反映出该子网络充分训练以后的结果**。在NAS中，这被称为一致性问题，继承权重训练的子网得到的验证集精度高，是否能代表子网从头训练的验证集精度同样高呢？实际上，很多基于权重共享的神经网络搜索方法的排序一致性都没有很理想。
+权重共享的神经网络搜索方法背后有一个基础原则：即**继承权重后的子网络在验证集上的表现能够反映出该子网络充分训练以后的结果**。在NAS中，这被称为一致性问题，继承权重训练的子网得到的验证集精度（supernet performance）高，是否能代表子网从头训练的验证集精度（evaluation performance）同样高呢？实际上，很多基于权重共享的神经网络搜索方法的排序一致性都没有很理想。
 
 SPOS处理方法是：提出了一个单路径的超网结构，如下图所示：
 
@@ -89,5 +91,35 @@ SPOS处理方法是：提出了一个单路径的超网结构，如下图所示�
 
 为了减少权重之间的耦合度，在每个Choice Block选择的时候必定会选择其中的一个choice，不存在恒等映射。在训练阶段随机选择子网，并验证其在验证集上的准确率。
 
-此外，为了保证每个选项都有均匀的训练机会，采用了均匀采样策略。同时为了满足一定的资源约束，比如FLOPS大小，会均匀采样一批网络，只训练满足资源约束的子网络。
+此外，为了保证每个选项都有均匀的训练机会，采用了**均匀采样策略**。同时为了满足一定的资源约束，比如FLOPS大小，会通过**均匀采样策略**采样一批网络，只训练满足资源约束的子网络。
+
+**不同类型的搜索方式**
+
+- 通道数搜索： 提出了一个基于权重共享的choice block, 其核心思想是预先分配一个最大通道个数的，然后随机选择通道个数，切分出对应的权重进行训练。通过权重共享策略，发现超网可以快速收敛。
+
+![通道搜索类似Slimmable Network](https://img-blog.csdnimg.cn/20210413130412994.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+- 混合精度量化搜索：在超网的训练过程中，每个选择block的 Feature Bit Width和Weight Bit Width会被随机采样，这个过程会在进化算法过程中决定。
+
+![量化搜索](https://img-blog.csdnimg.cn/20210413130451301.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+- 进化神经网络架构搜索：之前的one-shot工作使用的是随机搜索策略，对于较大的搜索空间来说不够高效。与其他工作不同，SPOS不需要将每个架构都从头进行搜索，而是每个架构只进行推理，来决定该架构是否有效。
+
+![进化算法伪代码](https://img-blog.csdnimg.cn/20210413131159323.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+> 重要细节：在进行子网推理之前，网络中所有的Batch Normalization的需要在训练集的子集上重新计算。这是因为supernet中由BN计算的数值往往不能应用于候选网络中。这部分操作被称为BN校正。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
