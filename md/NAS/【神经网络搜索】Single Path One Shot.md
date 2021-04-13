@@ -50,3 +50,44 @@ SPOS训练方式简单并且搜索非常迅速，支持多重搜索空间比如b
 - 超网中各个子网耦合度高，尚不清楚为何从超网继承权重的方式是有效的。
 - 同时优化网络权重参数W和架构参数θ会不可避免对架构引入某些偏好，这样在优化过程中会偏向于训练某些权重，造成不公平训练。
 
+
+
+## Single Path One-Shot
+
+架构参数和权重的耦合是基于权重共享的NAS方法不得不面对的问题，这是由于同时对两者进行优化导致的。为了缓解耦合问题，很自然的想法就是将超网的训练和网络搜索解耦合。
+
+one-shot方法分为两步，具体描述如下：
+
+第一步，超网优化方式为：
+
+
+$$
+W_{\mathcal{A}}=\underset{W}{\operatorname{argmin}} \mathcal{L}_{\text {train }}(\mathcal{N}(\mathcal{A}, W)) .
+$$
+
+$\mathcal{A}$代表网络搜索空间，W代表超网权重，$\mathcal{N}(\mathcal{A}, W)$代表超网中编码的搜索空间。
+
+第二步，网络架构搜索为：
+$$
+a^{*}=\underset{a \in \mathcal{A}}{\operatorname{argmax}} \mathrm{ACC}_{\text {val }}\left(\mathcal{N}\left(a, W_{\mathcal{A}}(a)\right)\right)
+$$
+a代表被采样的子网架构，它会继承超网的权重$W_{\mathcal{A}}(a)$,  然后在这个过程中挑选验证集上准确率最高的子网结构。
+
+**耦合问题的缓解方法**
+
+耦合缓解的方法有Path dropout 策略， 超网的每个边会被随机drop。通过这种方式可以降低节点之间的耦合程度，但是网络对其中的超参数dropout rate非常敏感，让训练过程变得更加困难。
+
+![drop rate参数的影响](https://img-blog.csdnimg.cn/20210413105520579.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+**基于均匀采样的单路径方法缓解耦合问题**
+
+权重共享的神经网络搜索方法背后有一个基础原则：即**继承权重后的子网络在验证集上的表现能够反映出该子网络充分训练以后的结果**。在NAS中，这被称为一致性问题，继承权重训练的子网得到的验证集精度高，是否能代表子网从头训练的验证集精度同样高呢？实际上，很多基于权重共享的神经网络搜索方法的排序一致性都没有很理想。
+
+SPOS处理方法是：提出了一个单路径的超网结构，如下图所示：
+
+![Single Path示意图](https://img-blog.csdnimg.cn/20210413110942924.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+为了减少权重之间的耦合度，在每个Choice Block选择的时候必定会选择其中的一个choice，不存在恒等映射。在训练阶段随机选择子网，并验证其在验证集上的准确率。
+
+此外，为了保证每个选项都有均匀的训练机会，采用了均匀采样策略。同时为了满足一定的资源约束，比如FLOPS大小，会均匀采样一批网络，只训练满足资源约束的子网络。
+
