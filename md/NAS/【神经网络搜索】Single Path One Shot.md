@@ -87,7 +87,7 @@ a代表被采样的子网架构，它会继承超网的权重$W_{\mathcal{A}}(a)
 
 SPOS处理方法是：提出了一个单路径的超网结构，如下图所示：
 
-![Single Path示意图](https://img-blog.csdnimg.cn/20210413110942924.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+![Single Path示意图](https://img-blog.csdnimg.cn/20210413110942924.png)
 
 为了减少权重之间的耦合度，在每个Choice Block选择的时候必定会选择其中的一个choice，不存在恒等映射。在训练阶段随机选择子网，并验证其在验证集上的准确率。
 
@@ -138,11 +138,11 @@ def bn_calibration_init(m):
 
 **搜索空间：block** 基于ShuffleNetv2设计的搜索空间，具体采用的架构如下，总共有20个CB(choice block)，每个choice block 可以选择四个block，分别是kernel=3、5、7的shufflenet Units和一个Xception的block组成。
 
-![超网的架构](https://img-blog.csdnimg.cn/20210413200846700.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+![超网的架构](https://img-blog.csdnimg.cn/20210413200846700.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_6,color_FFFFFF,t_70)
 
 **初步baseline:**
 
-![](https://img-blog.csdnimg.cn/20210413202041843.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+![](https://img-blog.csdnimg.cn/20210413202041843.png)
 
 其baseline是所有的choice block中都选择相同的选择，比如3x3的shufflenet Units，得到的top1准确率都差不太多；从搜索空间中随机采样一些候选网络，得到的结果虽然一样，但是作者认为这是由于随机搜索方法太过简单，以至于不能从大型的搜索空间找到好的候选网络；使用进化算法进行搜索，得到的结果是74.3，比所有的的baeline模型都高。
 
@@ -150,7 +150,7 @@ def bn_calibration_init(m):
 
 可以看出，同时搜索block和channel的结果性能更高，超过了其他同类型方法。
 
-![搜索代价对比](https://img-blog.csdnimg.cn/20210413204013785.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+![搜索代价对比](https://img-blog.csdnimg.cn/20210413204013785.png)
 
 
 
