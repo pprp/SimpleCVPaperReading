@@ -111,7 +111,7 @@ from absl import app
 from nasbench import api
 
 # Load the data from file (this will take some time)
-nasbench = api.NASBench('/path/to/nasbench.tfrecord')
+nasbench = api.NASBench('/home/pdluser/download/nasbench_only108.tfrecord')
 
 
 INPUT = 'input'
@@ -138,15 +138,89 @@ model_spec = api.ModelSpec(
 # associated with this model.
 data = nasbench.query(model_spec) # 根据配置查询结果
 
-nasbench.get_budget_counters() # 返回训练时间，epochs
+result = nasbench.get_budget_counters() # 返回训练时间，epochs
+
+print("data:", data)
+print("result:", result)
 
 fixed_metrics, computed_metrics = nasbench.get_metrics_from_spec(model_spec)
 # 每个epoch结果
 for epochs in nasbench.valid_epochs:
-    for repeat_index in range(len(computed_metrics[epoch])):
+    for repeat_index in range(len(computed_metrics[epochs])):
         data_point = computed_metrics[epochs][repeat_index] # 重复次数 每个epoch重复的结果
         
 ```
 
-## 5. 潜在研究方向
+输出结果：
+
+![result](https://img-blog.csdnimg.cn/20210513084958941.png)
+
+如果设置边数太多会报错：
+
+![max edge=9](https://img-blog.csdnimg.cn/20210513090456599.png)
+
+
+
+## 5. 实验内容
+
+这篇论文中对nas-bench-101数据集的几个指标进行了统计，并深入探索了NAS的特性。
+
+### 5.1 统计量
+
+- 经验累积分布empirical cumulative distribution ECDF
+
+![左图是准确率的经验累积分布，右图是噪声的经验累积分布](https://img-blog.csdnimg.cn/20210513092509864.png)
+
+可以从准确率累积经验分布看出，accuracy在0.8-1.0之间分布居多，并且训练集结果逼近1；还可以从该途中观察到一个现象，即验证集和测试集的相关性比较高r=0.999, 这表明模型的训练并没有过拟合。
+
+noise代表的是经过多次训练之间的准确率差异 ，可以发现108个epoch训练的noise最小。
+
+- 训练时间、可训练参数与训练精度之间的关系
+
+![训练时间、可训练参数与训练精度之间的关系](https://img-blog.csdnimg.cn/20210513094713349.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+左图展示了横轴训练参数、纵轴训练时间和训练精度之间的关系，可以发现以下几个规律：
+
+- 模型容量比较小，参数量小，训练时间过长反而在验证集准确率不好。
+- 模型容量比较大，参数量大，训练时间大体上是越长效果越好。
+- 在训练时间相同的情况下，模型参数量越大，验证机准确率越高。
+
+右图展示了训练时间和训练精度的帕累托曲线，实验发现resnet、inception这类人工设计的模型非常靠近帕累托前沿。这表明网络拓扑和具体操作的选择非常重要。
+
+### 5.2 架构设计
+
+为了探寻选取不同操作的影响，进行了替换实验，将原先的op替换为新op以后查看其对准确率的影响。
+
+![探寻不同op的影响](https://img-blog.csdnimg.cn/20210513095525255.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0REX1BQX0pK,size_16,color_FFFFFF,t_70)
+
+从上图中可以得到以下发现：
+
+- 将卷积替换为池化带来的负面影响比较大。
+- 将池化替换为卷积带来的正面影响比较大。
+
+- 将3x3卷积替换为1x1卷积或池化可以有效降低训练时间。
+
+### 5.3 局部性
+
+NAS中的局部性是：相似的网络架构的准确率也是相似的。很多NAS算法都在利用NAS的局部性原理来进行搜索。局部性衡量的指标是RWA(random-walk autocorrelation) 即随机游走自相关。RWA定义为当我们在空间中进行长距离随机变化时所访问的点的精度的自相关
+
+RWA在比较近的距离上有较高的相关性，反映了局部性。从下图中发现，当距离超过6以后，就无法判断是否是相关性还是噪声，所以搜索的过程最好约束在6以内。
+
+![RWA](https://img-blog.csdnimg.cn/20210513102635132.png)
+
+## 6. 总结
+
+nas-bench-101是一个表格型的数据集，在设计的搜索空间中找到网络的架构，并通过实际运行得到每个epoch的验证集结果。使用过程比较方便，根据规定配置从nas-bench-101中找到对应的网络架构以及相应的准确率、参数量等信息。
+
+
+
+## 7. 参考文献
+
+https://arxiv.org/pdf/1902.09635.pdf
+
+https://github.com/google-research/nasbench
+
+
+
+
 
