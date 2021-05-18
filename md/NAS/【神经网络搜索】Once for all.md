@@ -2,6 +2,8 @@
 
 【GiantPandaCV导语】Once for all是韩松组非常有影响力的工作，其最大的优点是解耦了训练和搜索过程，可以直接从超网中采样出满足一定资源限制的子网，而不需要重新训练。该工作被ICLR20接收。
 
+[TOC]
+
 ## 0. Info
 
 Title: Once-for-All: Train one Network and Specialize it for Efficient Deployment
