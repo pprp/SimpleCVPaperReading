@@ -5,9 +5,7 @@
 
 近几年，Attention-based方法因其可解释和有效性，受到了学术界和工业界的欢迎。但是，由于论文中提出的网络结构通常被嵌入到分类、检测、分割等代码框架中，导致代码比较冗余，对于像我这样的小白很难找到网络的核心代码，导致在论文和网络思想的理解上会有一定困难。因此，我把最近看的Attention、MLP和Re-parameter论文的核心代码进行了整理和复现，方便各位读者理解。本文主要对该项目的Attention部分做简要介绍。项目会持续更新最新的论文工作，欢迎大家follow和star该工作，若项目在复现和整理过程中有任何问题，欢迎大家在issue中提出，我会及时回复~
 
-关于文章有任何问题，欢迎在评论区留言或者添加作者微信: xmu_xiaoma
 
-![](https://secure.wostatic.cn/static%2F5B1tWMAjt2YJQd9z9EABjd%2Fimage.png?auth_key=1625192410-vVkvEdUSDu51dvR73WasHs-0-67dc44a9200b0c40d55f13a5ee76dcc8&image_process=resize,w_394)
 
 ## 项目地址
 
@@ -23,7 +21,7 @@ SA-NET: Shuffle Attention For Deep Convolutional Neural Networks[1]
 
 ### 11.2. 模型结构
 
-![](https://secure.wostatic.cn/static%2Fn3orMgeUCqTpseFUVVdkgV%2Fimage.png?auth_key=1625192410-9Pettyit1R7yBNwmp7BNTm-0-29f97272b85bb6dc126a2a95f7e8acef&image_process=resize,w_616)
+![](https://img-blog.csdnimg.cn/img_convert/83b3952f54570306dc51996f5df0393d.png)
 
 ### 11.3. 简介
 
@@ -123,14 +121,14 @@ print(output.shape)
 
 ## 12.2. 模型结构
 
-![](https://secure.wostatic.cn/static%2Fdk9qZa8vUoMohuZerzquc7%2Fimage.png?auth_key=1625192410-gVUqZWSh5c2gWsFz1mrrNt-0-b888b0686177ec05731c97e58c65bc52&image_process=resize,w_6166)
+![](https://img-blog.csdnimg.cn/img_convert/54b1e86ac8ff60b37d8c12e0483afb90.png)
 
 
 ## 12.3. 简介
 
 这是北大团队2019年在arXiv上发布的一篇文章，主要解决的是Self-Attention（SA）只有全局捕获能力的缺点。如下图所示，当句子长度变长时，SA的全局捕获能力变弱，导致最终模型性能变差。因此，作者在文中引入了多个不同感受野的一维卷积来捕获多尺度的局部Attention，以此来弥补SA在建模长句子能力的不足。
 
-![](https://secure.wostatic.cn/static%2Fx35uaUrWrGzJwpdR42ZAGU%2Fimage.png?auth_key=1625192410-vDxBPaGQvCANSA8DZ3sHz9-0-8131049430371b4259fd78cf83c52f6a&image_process=resize,w_420)
+![](https://img-blog.csdnimg.cn/img_convert/2eee3ece3442e2138e7f773b2a1bb33e.png)
 
 实现方式如模型结构所示的那样，将SA的结果和多个卷积的结果相加，不仅进行全局感知，还进行局部感知（这一点跟最近的VOLO[4]和CoAtNet[5]的motivation很像）。最终通过引入多尺度的局部感知，使模型在翻译任务上的性能得到了提升。
 
@@ -247,7 +245,7 @@ print(output.shape)
 
 ## 13.2. 模型结构
 
-![](https://secure.wostatic.cn/static%2F3Ga7VSaWJsSd614kHjEtHX%2Fimage.png?auth_key=1625192410-g5h6rXECZUanRsMWbzN5Cm-0-fc3c83b6fcb7e0d4e5cd0fe78d553c82&image_process=resize,w_616)
+![](https://img-blog.csdnimg.cn/img_convert/78662e2fe9076bc0542c98882f00a71f.png)
 
 
 ## 13.3. 简介
@@ -330,7 +328,7 @@ print(output.shape)
 
 ## 14.2. 模型结构
 
-![](https://secure.wostatic.cn/static%2FcAfQRadh4ptzWDc4CMsupB%2Fimage.png?auth_key=1625192410-etQdpB2wnH2XxrmVPRNbsu-0-8a32a465ee95e2e0cf41593ea5d8e451&image_process=resize,w_616)
+![](https://img-blog.csdnimg.cn/img_convert/b91a0763ee813cccd530e3ae23ed0691.png)
 
 ## 14.3. 简介
 
@@ -407,7 +405,7 @@ An Attention Free Transformer[14]
 
 ## 15.2. 模型结构
 
-![](https://secure.wostatic.cn/static%2FcAfQRadh4ptzWDc4CMsupB%2Fimage.png?auth_key=1625192410-etQdpB2wnH2XxrmVPRNbsu-0-8a32a465ee95e2e0cf41593ea5d8e451&image_process=resize,w_616)
+![](https://img-blog.csdnimg.cn/img_convert/3cb6e1e9ac02f66aa27d0538ae1f9583.png)
 
 ## 15.3.  简介
 
@@ -512,4 +510,10 @@ print(output.shape)
 [13]. Hu, Jie, Li Shen, and Gang Sun. "Squeeze-and-excitation networks." *Proceedings of the IEEE conference on computer vision and pattern recognition* . 2018.1
 
 [14]. Zhai, Shuangfei, et al. "An Attention Free Transformer." *arXiv preprint arXiv:2105.14103*  (2021).
+
+
+
+关于文章有任何问题，欢迎在评论区留言或者添加作者微信: xmu_xiaoma
+
+![](https://img-blog.csdnimg.cn/img_convert/c13b689db31b540e0089624dd2411c8e.png)
 
