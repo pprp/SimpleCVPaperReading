@@ -15,9 +15,7 @@ NAS在很多问题和benchmark上都取得了SOTA的成就，比如图像分类�
 所以这篇短文会讨论：
 
 - 如何提升模型训练的稳定性。
-
 - 如何提升模型训练的高效性。
-
 - 如何提升模型训练的整体性能。
 
 ## 2. 基于梯度的NAS的稳定&训练one-shot模型的方法
@@ -31,7 +29,6 @@ Gradient-based NAS（最经典的DARTS）通常是将离散的搜索空间进行
 过早收敛问题的一个**通用的Trick** 是：
 
 - 一开始只优化网络的权重
-
 - 在整个搜索过程经历一半以后再进行优化网络架构参数。
 
 Sampling-based NAS也会有类似的weights warm-up的方法。One-Shot（Bender）一开始训练整个one-shot网络模型，然后逐步提高path dropout rate。TuNAS中打开一个one-shot模型中的全部候选op，然后让选择全部op的概率下降到0。
@@ -39,7 +36,6 @@ Sampling-based NAS也会有类似的weights warm-up的方法。One-Shot（Bender
 还可以将两个过程完全解耦：
 
 - 先对one-shot模型进行完全的训练
-
 - 然后在进行搜索过程。
 
 ### 2.2 正则化和Loss Landscape Smoothing
@@ -49,19 +45,15 @@ Sampling-based NAS也会有类似的weights warm-up的方法。One-Shot（Bender
 通常采用的方法有：
 
 - drop path
-
 - weight decay
-
 - data augmentation
-
 - robust loss functions (SAM谷歌的)
-
-&ensp;&ensp;&ensp;&ensp;> Stabilizing differentiable archi- tecture search via perturbation-based regularization
+  - Stabilizing differentiable archi- tecture search via perturbation-based regularization
 
 
 - implicitly smoothing the loss function via auxiliary connections.
 
-&ensp;&ensp;&ensp;&ensp;> Robustly stepping out of performance collapse without indicators.
+  - Robustly stepping out of performance collapse without indicators.
 
 
 ### 2.3 Normalization 方法
@@ -73,11 +65,8 @@ Sampling-based NAS也会有类似的weights warm-up的方法。One-Shot（Bender
 Batch Norm和基于采样的方法结合也会存在问题，因为归一化统计量会随着不同的采样路径而变化。在训练one-shot nas的过程中，一开始可能会出现训练不稳定的情况，可以以下几种方法来克服：
 
 - 使用验证阶段的batch统计量(又称BN Calibration)
-
 - 使用Ghost Batch Normalization
-
 - 使用synchronized Batch Normalization完成跨GPU的BN
-
 - NAS-FCOS使用了Group Normalization来取代BN。
 
 ## 3. NAS训练过程加速
@@ -109,7 +98,6 @@ NAS在被用到目标检测、语义分割等领域的时候，一般可以将�
 如何在搜索过程中找到最优架构是至关重要的：
 
 - 由于几乎所有的方法都采用低保真度估计，代理任务上的rank排名可能和真实任务上的rank排名并不一致。
-
 - 目前还没有很好的理解权重共享机制是如何影响架构的排序。
 
 为了减少 co-adaptation问题，Few-Shot neural architecture Search提出了使用Sub-one-shot模型的方法，每个子模型负责覆盖一部分的搜索空间。
@@ -121,14 +109,22 @@ NAS在被用到目标检测、语义分割等领域的时候，一般可以将�
 网络的性能受很多因素影响：
 
 - data augmentation: cutout,mixup, autoaugmentation
-
 - stochastic regularization: shake-shake等
-
 - activation functions: Search for activation functions
-
 - learning rate: SGDR
 
 ICLR20一篇文章 NAS is trustratingly hard 进行了详尽的消融实验，证明了训练流程甚至要比网络的架构更加重要。
 
 此外，搜索的超参数对one-shot NAS方法额外重要。ICLR20另一篇Nas-bench-1shot1优化了各种one-shot网络算法的超参数，找到的解决方案可以优于黑盒NAS优化器。
+
+## 后记
+
+NAS工程实现以及优化方式与传统普通的CNN构建方式有所不同，对工程要求更高，使用不同的Trick，不同的优化方式对超网的训练都有比较大的影响。本文刚好收集了一批这样的Trick，在工程实践方面有很大的参考价值。
+
+ps: 近期笔者在CIFAR10数据集上测评了常见的模型，同时收集了一批Trick和数据增强方法。如果有遗漏的，欢迎在Issue中补充。
+
+https://github.com/pprp/pytorch-cifar-tricks
+
+
+
 
