@@ -1,11 +1,55 @@
 # SimplePaperReading
 分享公众号GiantPandaCV中的博客＆"神经网络架构搜索"中的博客
 
-(1) GiantPandaCV公众号
 
-![qrcode_gpc](img/qrcode_gpc.jpg)
 
-(2) 神经网络架构搜索公众号
+## 目录
 
-![](img/qrcode_for_nas.jpg)
+- [神经网络结构搜索](#神经网络结构搜索)
+- [注意力机制](#注意力机制)
+- [Transformer](#Transformer)
+- [工具集](#工具集)
+
+
+
+## 神经网络结构搜索
+
+
+
+
+
+
+
+
+## 注意力机制
+
+
+
+
+
+## Transformer
+
+
+
+
+
+## 目标检测
+
+
+
+
+
+## 工具集
+
+
+
+
+
+
+
+
+
+
+
+
 
