@@ -1,7 +1,11 @@
 # SimplePaperReading
-分享公众号GiantPandaCV中的博客＆"神经网络架构搜索"中的博客
+分享公众号GiantPandaCV中的博客＆"神经网络架构搜索"中的博客列表。
 
+- 📦 CSDN: https://blog.csdn.net/DD_PP_JJ
+- 😃 博客园: https://www.cnblogs.com/pprp
+- 😇 zhihu: https://www.zhihu.com/people/peijieDong
 
+- :astonished: 简书：https://www.jianshu.com/u/d9ab1e1c8ba4
 
 ## 目录
 
@@ -12,7 +16,7 @@
   - [YOLOv3系列](#YOLOv3系列)
   - [CenterNet系列](#CenterNet系列)
   - [多目标跟踪](#多目标跟踪)
-- [领域综述](#综述)
+- [领域综述](#领域综述)
 - [工具集](#工具集)
 
 
@@ -146,30 +150,47 @@
 | [知识蒸馏综述：代码整理](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E7%9F%A5%E8%AF%86%E8%92%B8%E9%A6%8F/%E7%9F%A5%E8%AF%86%E8%92%B8%E9%A6%8F%E7%BB%BC%E8%BF%B0%EF%BC%9A%E4%BB%A3%E7%A0%81%E6%95%B4%E7%90%86_pprp.md) |
 | [知识蒸馏综述：蒸馏机制](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E7%9F%A5%E8%AF%86%E8%92%B8%E9%A6%8F/%E7%9F%A5%E8%AF%86%E8%92%B8%E9%A6%8F%E7%BB%BC%E8%BF%B0%EF%BC%9A%E8%92%B8%E9%A6%8F%E6%9C%BA%E5%88%B6_pprp.md) |
 
-## 综述
+## 领域综述
 
-| 博客题目 |
-| -------- |
-| []()     |
-| []()     |
-| []()     |
-| []()     |
-| []()     |
-| []()     |
-| []()     |
-
-
+| 博客题目                                                     |
+| ------------------------------------------------------------ |
+| [Bag of Tricks for Object Detection](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E9%A2%86%E5%9F%9F%E7%BB%BC%E8%BF%B0/bag%20of%20trick%20for%20object%20detection.md) |
+| [【科普】神经网络中的随机失活方法](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E9%A2%86%E5%9F%9F%E7%BB%BC%E8%BF%B0/Dropout%E6%A8%A1%E5%BC%8F%E5%92%8C%E5%8F%91%E5%B1%95.md) |
+| [DeepSort框架梳理](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E9%A2%86%E5%9F%9F%E7%BB%BC%E8%BF%B0/deepsort%E6%A1%86%E6%9E%B6%E6%A2%B3%E7%90%86.md) |
+| [precision和recall重新理解](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E9%A2%86%E5%9F%9F%E7%BB%BC%E8%BF%B0/precision%E5%92%8Crecall%E9%87%8D%E6%96%B0%E7%90%86%E8%A7%A3.md) |
+| [PyTorch中模型的可复现性](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E9%A2%86%E5%9F%9F%E7%BB%BC%E8%BF%B0/pytorch%E4%B8%AD%E7%9A%84%E6%A8%A1%E5%9E%8B%E5%8F%AF%E5%A4%8D%E7%8E%B0%E6%80%A7.md) |
+| [目标检测和感受野的总结和想法](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E9%A2%86%E5%9F%9F%E7%BB%BC%E8%BF%B0/%E5%85%B3%E4%BA%8E%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%92%8C%E6%84%9F%E5%8F%97%E9%87%8E%E7%9A%84%E4%B8%80%E7%82%B9%E6%80%BB%E7%BB%93%E5%92%8C%E6%83%B3%E6%B3%95.md) |
+| [【综述】神经网络中不同类型的卷积层](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E9%A2%86%E5%9F%9F%E7%BB%BC%E8%BF%B0/%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E4%B8%AD%E5%8D%B7%E7%A7%AF%E6%A0%B8%E6%A2%B3%E7%90%86.md) |
+| [卷积神经网络中的各种池化操作](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E9%A2%86%E5%9F%9F%E7%BB%BC%E8%BF%B0/%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E4%B8%AD%E7%9A%84%E6%B1%A0%E5%8C%96%E6%93%8D%E4%BD%9C.md) |
+| [多目标跟踪MOT16数据集和评价指0标](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E9%A2%86%E5%9F%9F%E7%BB%BC%E8%BF%B0/%E5%A4%9A%E7%9B%AE%E6%A0%87%E8%B7%9F%E8%B8%AA%E6%95%B0%E6%8D%AE%E9%9B%86%E8%A7%A3%E6%9E%90.md) |
+| [【翻译】手把手教你用AlexeyAB版Darknet](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E9%A2%86%E5%9F%9F%E7%BB%BC%E8%BF%B0/%E6%9D%A5%E8%87%AAAlexeyAB%E7%9A%84%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E5%BB%BA%E8%AE%AE.md) |
 
 
 
 ## 工具集
 
-| 博客题目 |
-| -------- |
-| []()     |
-| []()     |
-| []()     |
-| []()     |
+| 博客题目                                                     |
+| ------------------------------------------------------------ |
+| [Fixing the train-test resolution discrepancy](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/Fixing%20the%20train-test%20resolution_pprp.md) |
+| [【论文阅读】Mixed Precision Training](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/Mixed%20Precision%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB.md) |
+| [PyTorch Lightning工具学习](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/Pytorch_lightning%E5%B7%A5%E5%85%B7%E6%8E%A8%E8%8D%90.md) |
+| [Tensorflow2.0 入门](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/Tensorflow2.0%20%E5%85%A5%E9%97%A8%EF%BC%88%E4%B8%80%EF%BC%89.md) |
+| [Ubuntu16.04 Cuda11.1 Cudnn8.1 Tensorflow2.4环境配置](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/Tensorflow2.4%20Ubuntu16.04%E5%AE%89%E8%A3%85.md) |
+| [DarkLabel转换MOT、ReID、VOC格式数据集脚本分享](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/darklabel%E6%95%99%E7%A8%8B.md) |
+| [docker入门级使用教程](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/docker%E5%85%A5%E9%97%A8%E7%BA%A7%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B.md) |
+| [深度学习应用的服务端部署](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/flask%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%BA%94%E7%94%A8%E7%9A%84%E6%9C%8D%E5%8A%A1%E7%AB%AF%E9%83%A8%E7%BD%B2.md) |
+| [Python Yaml配置工具](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/python%20yaml%E9%85%8D%E7%BD%AE%E5%B7%A5%E5%85%B7.md) |
+| [Sphinx 快速构建工程文档](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/sphinx%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BA%E5%B7%A5%E7%A8%8B%E6%96%87%E6%A1%A3.md) |
+| [Tmux科研利器-更方便地管理实验](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/tmux%E4%BD%BF%E7%94%A8%E8%B0%83%E7%A0%94.md) |
+| [**人脸轻量级**](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/%E4%BA%BA%E8%84%B8%E8%BD%BB%E9%87%8F%E7%BA%A7.md) |
+| [如何使用logging生成日志](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8logging%E7%94%9F%E6%88%90%E6%97%A5%E5%BF%97.md) |
+| [如何更好地调整学习率？](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/%E5%A6%82%E4%BD%95%E6%9B%B4%E5%A5%BD%E5%9C%B0%E8%B0%83%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%8E%87%EF%BC%9F.md) |
+| [如何阅读和学习深度学习项目代码](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/%E5%A6%82%E4%BD%95%E9%98%85%E8%AF%BB%E5%92%8C%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE%E4%BB%A3%E7%A0%81.md) |
+| [快速入门使用tikz绘制深度学习网络图](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/%E5%BF%AB%E9%80%9F%E5%AD%A6%E4%B9%A0%E4%BD%BF%E7%94%A8tikz%E7%BB%98%E5%88%B6CNN%E7%A4%BA%E6%84%8F%E5%9B%BE.md) |
+| [【译】科研敏感性锻炼](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/%E7%A7%91%E7%A0%94%E6%95%8F%E6%84%9F%E6%80%A7.md) |
+| [简易关键点标注软件分享](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/%E7%AE%80%E6%98%93%E5%85%B3%E9%94%AE%E7%82%B9%E6%A0%87%E6%B3%A8%E8%BD%AF%E4%BB%B6.md) |
+| [分布式训练框架Horovod初步学习](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/%E5%88%86%E5%B8%83/Horovod%E5%88%9D%E6%AD%A5.md) |
+| [PyTorch消除训练瓶颈 提速技巧](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E5%B7%A5%E5%85%B7%E7%B1%BB/%E5%88%86%E5%B8%83/PyTorch%E8%AE%AD%E7%BB%83%E5%8A%A0%E9%80%9FDataLoader.md) |
 
 
 
