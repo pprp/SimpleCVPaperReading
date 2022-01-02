@@ -12,6 +12,7 @@
   - [YOLOv3系列](#YOLOv3系列)
   - [CenterNet系列](#CenterNet系列)
   - [多目标跟踪](#多目标跟踪)
+- [领域综述](#综述)
 - [工具集](#工具集)
 
 
@@ -144,6 +145,20 @@
 | [知识蒸馏综述:网络结构搜索应用](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E7%9F%A5%E8%AF%86%E8%92%B8%E9%A6%8F/%E7%9F%A5%E8%AF%86%E8%92%B8%E9%A6%8F%E7%BB%BC%E8%BF%B0_%E7%BD%91%E7%BB%9C%E7%BB%93%E6%9E%84%E6%90%9C%E7%B4%A2%E5%BA%94%E7%94%A8_pprp.md) |
 | [知识蒸馏综述：代码整理](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E7%9F%A5%E8%AF%86%E8%92%B8%E9%A6%8F/%E7%9F%A5%E8%AF%86%E8%92%B8%E9%A6%8F%E7%BB%BC%E8%BF%B0%EF%BC%9A%E4%BB%A3%E7%A0%81%E6%95%B4%E7%90%86_pprp.md) |
 | [知识蒸馏综述：蒸馏机制](https://github.com/pprp/SimpleCVPaperAbstractReading/blob/master/md/%E7%9F%A5%E8%AF%86%E8%92%B8%E9%A6%8F/%E7%9F%A5%E8%AF%86%E8%92%B8%E9%A6%8F%E7%BB%BC%E8%BF%B0%EF%BC%9A%E8%92%B8%E9%A6%8F%E6%9C%BA%E5%88%B6_pprp.md) |
+
+## 综述
+
+| 博客题目 |
+| -------- |
+| []()     |
+| []()     |
+| []()     |
+| []()     |
+| []()     |
+| []()     |
+| []()     |
+
+
 
 
 
