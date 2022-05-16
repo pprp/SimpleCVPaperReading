@@ -57,9 +57,9 @@ STE是这样的，$\mathcal{G}_{\mathbf{x}_{n}}=\mathcal{G}_{\mathbf{x}_{q}}$, �
 
 STE是次优的原因：
 
-（1）多个*x_n*可以产生相同的*x_q*，大白话就是多个fp32的数值变成同一个int值；
+（1）多个$x_n$可以产生相同的$x_q$，大白话就是多个fp32的数值变成同一个int值；
 
-（2）*x_n*提供的相同梯度对每个*x_q*都有不同的影响，大白话就是虽然梯度*x_n*的一样的，但是对应的*x_q*是不一样的，这个就是mismatch的问题。
+（2）$x_n$提供的相同梯度对每个$x_q$都有不同的影响，大白话就是虽然梯度$x_n$的一样的，但是对应的$x_q$是不一样的，这个就是mismatch的问题。
 
 
 
@@ -98,22 +98,29 @@ $$
 \delta=\frac{g_{x_{q}}^{\prime}}{\left|g_{x_{q}}\right|}
 $$
 
-但是直接计算海森矩阵又很耗计算，故采用了计算海森矩阵的对角线的均值来近似，后面基于海森矩阵的公式推导就不贴出来，基于了一些假设，但公式其实很容易理解。
-
-最后*δ*的公式如下：N是海森矩阵中对角线元素的个数，G是由梯度Gx的分布决定的梯度表示。
-
-
+海森矩阵的公式推导基于了一个假设(没怎么看懂，也不想深入探究，摆烂)，得出这么个公式，
 $$
-\delta=\frac{\operatorname{Tr}(H)/N}{G}(5)
+\mathbb{E}\left[\mathbf{v} \mathbf{v}^{T}\right]=I
 $$
-
-实验中发现梯度很多是0，这样梯度的平均值偏向于0，把G设置成偏大的数：
-
+代入并且进行变换，   
 $$
-3\sigma\left(\mathcal{G}_{\mathbf{x}_{q}}\right)
+\begin{aligned}
+\operatorname{Tr}(H) &=\operatorname{Tr}(H I)=\operatorname{Tr}\left(H \mathbb{E}\left[\mathbf{v}^{T}\right]\right) \\
+&=\mathbb{E}\left[\operatorname{Tr}\left(H \mathbf{v} \mathbf{v}^{T}\right)\right]=\mathbb{E}\left[\mathbf{v}^{T} H \mathbf{v}\right]
+\end{aligned}
 $$
+最后*δ*的公式如下：N是海森矩阵中对角线元素的个数，G是由梯度Gx的分布决定的梯度表示。   
 
+但这个变换对于计算的意义我还是没看懂，因为这样还是要计算海森矩阵，估计也是用pyHessian的library算的，是用其他近似的方法求个海森矩阵，具体在HAWQ(v1、v2、v3)（下次一定写这三篇工作）。 
 
+***个人觉得这个变换很凑数，也可能自己没看看懂那个假设，有看懂的大佬麻烦指正我！。***
+$$
+\delta=\frac{\operatorname{Tr}(H) / N}{G} (5)
+$$
+实验中发现梯度很多是0，这样梯度的平均值偏向于0，把G设置成偏大的数：   
+$$
+3 \sigma\left(\mathcal{G}_{\mathbf{x}_{q}}\right)
+$$
 
 ## 3、实验
 
