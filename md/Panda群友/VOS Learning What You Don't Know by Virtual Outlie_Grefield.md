@@ -14,9 +14,9 @@
 
 现代深度神经网络在已知的环境中获得了前所未有的成功，但它们常常难以处理未知的环境。特别是，神经网络已被证明对out- distribution (OOD)测试输入产生高后验概率，即会把一些OOD的类别定义为In-distribution的类别。以自动驾驶汽车为例，训练一个对象检测模型来识别分布内的对象(如汽车、停车标志)，可以对驼鹿的看不见的物体产生高置信度预测，预测为了行人。这样的故障情况会影响模型的可靠性。更糟糕的是，当部署在安全应用的关键程序程序中时，可能会导致灾难。
 
-![image-20220807223432701](rg9005y61.hn-bkt.clouddn.com/image-20220807223432701.png)
 
-![image-20220805154335297](https://cdn.jsdelivr.net/gh/Taly-1119/blogImage@main/img/image-20220805154335297.png)
+
+![image-20220805154335297](https://img-blog.csdnimg.cn/bb2c1d9ee8024a989844449cb66e5ac4.png)
 
 无法感知出OOD的输入，很大成都上是因为在训练期间缺乏对ID数据边界的建模造成的。特别是，神经网络通常只对分布内(ID)数据进行优化，而缺少对OOD数据的感知。由此产生的决策边界，尽管在分类等ID任务中很有用，但对于OOD检测来说可能是很难正确完成的。如上图所示，ID数据(灰色)由三个类条件高斯组成，在此基础上训练一个三向softmax分类器。得到的分类器对于远离ID数据的区域产生over-confidence的现象(见图I(b)中的红色阴影部分)，影响了OOD的检测。理想情况下，模型应该学习一个更紧凑的决策边界，该边界为ID数据产生较低的不确定性，而在其他地方产生较高的OOD不确定性(例如，图[1(c))。然而，由于缺乏未知的监督信号，实现这一目标并非易事。
 
@@ -30,9 +30,9 @@
 
 ### 3. 方法框架
 
-![image-20220807223509212](rg9005y61.hn-bkt.clouddn.com/image-20220807223509212.png)
 
-![image-20220805154929065](https://cdn.jsdelivr.net/gh/Taly-1119/blogImage@main/img/image-20220805154929065.png)
+
+![image-20220805154929065](https://img-blog.csdnimg.cn/d20591a1136d47b191fee84a04c93e2e.png)
 
 提出的新颖的未知感知学习框架如上图所示。 论文提出的框架包括 三种新组分，针对以下问题:
 
@@ -71,9 +71,9 @@ where $W_{\text {cls }} \in \mathbb{R}^{m \times K}$ is the weight of the last f
 
 然后就是根据一个全连接层计算出输出的logit。
 
-![image-20220807223729739](rg9005y61.hn-bkt.clouddn.com/image-20220807223729739.png)
 
-![image-20220805160703904](https://cdn.jsdelivr.net/gh/Taly-1119/blogImage@main/img/image-20220805160703904.png)
+
+![image-20220805160703904](https://img-blog.csdnimg.cn/64b881ebcbd24bf8a2941f3519964521.png)
 
 #### 3.2 利用outlier训练的方式
 
@@ -99,23 +99,19 @@ $$
 
 ### 4. 实验结果
 
-![](rg9005y61.hn-bkt.clouddn.com/image-20220807223741384.png)
+![](https://img-blog.csdnimg.cn/ec8ddd97b23d49388fb2b707b0537e96.png)
 
 跟其他的OOD检测的方法比，自然是性能优越不少，同时可以看到，采用相同的网络，对于ID数据的识别也是有提升的，mAP也比较高。
 
-![image-20220805163513052](https://cdn.jsdelivr.net/gh/Taly-1119/blogImage@main/img/image-20220805163513052.png)
+![image-20220805163513052](https://img-blog.csdnimg.cn/c58d7128b6d24688a6df89d025896f1c.png)
 
 相较于其他的生成outlier的方式，也具有一定的优势。
 
-![](rg9005y61.hn-bkt.clouddn.com/image-20220807223807224.png)
-
-虽然文章主要实验在使用目标检测进行判断，但在CIFAR-10这一分类数据集上，也有明显的效果。
-
-![image-20220807223918037](rg9005y61.hn-bkt.clouddn.com/image-20220807223918037.png)
+![image-20220807223918037](https://img-blog.csdnimg.cn/3c725b5385c148bfae9a489a7e1b68f1.png)
 
 通过对energy权重的分析，也可以发现权重和物体的数量呈现非常明显的正相关。
 
-![](rg9005y61.hn-bkt.clouddn.com/image-20220807223937730.png)
+![](https://img-blog.csdnimg.cn/713bd4a26784482da57d41aa7a4036b9.png)
 
 发现采用这种outlier的合成方式，通过降维可视化也的确符合预期，是在ID数据的boundary上进行采样。
 
